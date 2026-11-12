@@ -26,7 +26,7 @@
               <span v-if="myScore" class="my-label">我的评分: {{ myScore }}分</span>
             </div>
           </div>
-          <div class="seller"><span>卖家：{{ book.seller_name }}</span><el-button v-if="book.seller_id && auth.user?.id !== book.seller_id" text size="small" type="primary" @click="$router.push('/messages/'+book.seller_id)" class="pm-btn">💬 私信</el-button><span>上架：{{ book.listed_at || book.listedAt }}</span></div>
+          <div class="seller"><span>卖家：{{ book.seller_name }}</span><el-button v-if="book.seller_id && auth.user?.id !== book.seller_id" text size="small" type="primary" @click="$router.push('/messages/'+book.seller_id)" class="pm-btn">💬 私信</el-button><span>上架：{{ formatDate(book.listed_at || book.listedAt) }}</span></div>
           <div class="acts" v-if="book.status==='在售'"><el-button type="primary" size="large" @click="addCart">加入购物车</el-button><el-button size="large" @click="openBuyDlg">立即购买</el-button><el-button size="large" @click="showSwapDlg=true" class="swap-btn">🔄 发起交换</el-button></div>
           <el-tag v-else type="info" size="large">{{ book.status==='已交换'?'该图书已被交换':book.status==='已售罄'?'该图书已售罄':'该图书已下架' }}</el-tag>
         </div>
@@ -105,6 +105,12 @@ async function tFav() {
   ElMessage({ message: added ? '已收藏' : '取消收藏', type: 'success', duration: 1000, showClose: false })
 }
 function addCart() { cart.addItem(book.value); ElMessage.success('已加入购物车') }
+// 上架时间按数据库里存的日期展示，避免直接暴露 ISO 字符串或受时区影响
+function formatDate(t) {
+  if (!t) return ''
+  const m = String(t).match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/)
+  return m ? `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}` : String(t)
+}
 function openBuyDlg() { if(!auth.isLoggedIn){ElMessage.warning('请先登录');router.push('/login');return}; buyDlg.addr = auth.user?.address || ''; buyDlg.phone = auth.user?.phone || ''; buyDlg.vis = true }
 async function doBuyNow() {
   if(!buyDlg.addr||!buyDlg.phone){ElMessage.warning('请填写地址和电话');return}
