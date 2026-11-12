@@ -1,0 +1,26 @@
+{
+  "name": "shuyi-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "书易 Shuyi — 校园二手图书交易平台后端（Express + MySQL）",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "init-db": "node init-db.js",
+    "smoke": "node scripts/smoke.mjs",
+    "recalc-sales": "node scripts/recalc-sales.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.1.1",
+    "mysql2": "^3.11.0",
+    "sharp": "^0.35.2"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}
