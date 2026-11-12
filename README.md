@@ -10,9 +10,13 @@
   <img src="./docs/screenshots/portal.png" alt="用户端 / 管理端双入口" width="100%">
 </p>
 
-| 图书详情 | 管理端 · 图书管理 |
+| 首页 | 图书详情 |
 |---|---|
-| <img src="./docs/screenshots/book-detail.png" alt="图书详情页"> | <img src="./docs/screenshots/admin-books.png" alt="管理端图书管理"> |
+| <img src="./docs/screenshots/home.png" alt="首页"> | <img src="./docs/screenshots/book-detail.png" alt="图书详情页"> |
+
+| 管理端 · 控制台 | 管理端 · 图书管理 |
+|---|---|
+| <img src="./docs/screenshots/admin-dashboard.png" alt="管理端控制台"> | <img src="./docs/screenshots/admin-books.png" alt="管理端图书管理"> |
 
 ## 功能
 
