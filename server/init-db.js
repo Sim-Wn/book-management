@@ -16,12 +16,8 @@ if (!/^[A-Za-z0-9_]+$/.test(DB_NAME)) {
 async function init() {
   console.log(`正在连接 MySQL (${config.db.user}@${config.db.host}:${config.db.port})...`)
   const conn = await mysql.createConnection({
-    host: config.db.host,
-    port: config.db.port,
-    user: config.db.user,
-    password: config.db.password,
+    ...config.db,
     multipleStatements: true,
-    connectTimeout: 5000,
   })
 
   await conn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`)

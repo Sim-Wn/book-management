@@ -55,13 +55,18 @@ function parseDbUrl(raw) {
 const dbUrl = parseDbUrl(process.env.MYSQL_URL || process.env.DATABASE_URL)
 const dbPassword =
   process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : (dbUrl.password ?? 'root')
-const dbSsl = process.env.DB_SSL === '1' || dbUrl.ssl ? { minVersion: 'TLSv1.2' } : undefined
+const dbHost = process.env.DB_HOST || dbUrl.host || 'localhost'
+// 云数据库（TiDB / Aiven / 托管 MySQL）基本都强制 TLS：非本机地址默认开启，DB_SSL=0 可关闭
+const isLocalDb = ['localhost', '127.0.0.1', '::1'].includes(dbHost)
+const dbSslWanted =
+  process.env.DB_SSL !== undefined ? process.env.DB_SSL === '1' : dbUrl.ssl || !isLocalDb
+const dbSsl = dbSslWanted ? { minVersion: 'TLSv1.2' } : undefined
 
 export const config = {
   port: Number(process.env.PORT) || 3000,
   jwtSecret: process.env.JWT_SECRET || DEV_JWT_SECRET,
   db: {
-    host: process.env.DB_HOST || dbUrl.host || 'localhost',
+    host: dbHost,
     port: Number(process.env.DB_PORT) || dbUrl.port || 3306,
     user: process.env.DB_USER || dbUrl.user || 'root',
     password: dbPassword,
