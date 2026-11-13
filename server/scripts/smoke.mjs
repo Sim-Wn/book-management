@@ -166,6 +166,16 @@ check('确认完成', (await call('PUT', `/api/orders/${order2}/status`, { token
 const sold = await call('GET', `/api/books/${bookA.id}`)
 check('完成后销量 +2', Number(sold.data?.sales) === Number(salesBefore) + 2, `${salesBefore} -> ${sold.data?.sales}`)
 
+// ---------- 6.1 订单详情与卖家视角 ----------
+const orderDetail = await call('GET', `/api/orders/${order2}`, { token: tok.b })
+check('买家可查看订单详情', orderDetail.status === 200 && Array.isArray(orderDetail.data?.items))
+check('无关用户不能看订单详情 = 403', (await call('GET', `/api/orders/${order2}`, { token: tok.c })).status === 403)
+
+const sellerOrders = await call('GET', '/api/orders?role=seller', { token: tok.a })
+check('卖家能看到别人买自己书的订单', Array.isArray(sellerOrders.data) && sellerOrders.data.some((o) => String(o.id) === String(order2)))
+const buyerOrders = await call('GET', '/api/orders', { token: tok.a })
+check('买家视角不含自己卖出的订单', Array.isArray(buyerOrders.data) && !buyerOrders.data.some((o) => String(o.id) === String(order2)))
+
 // ---------- 7. 跨卖家订单应被拒绝 ----------
 const mixed = await call('POST', '/api/orders', {
   token: tok.b,
@@ -194,10 +204,13 @@ check('删除回复', (await call('DELETE', `/api/forum/replies/${replyId}`, { t
 const detail2 = await call('GET', `/api/forum/posts/${postId}`)
 check('删除后回复数 -1', Number(detail2.data?.reply_count) === 0, `got ${detail2.data?.reply_count}`)
 
-// ---------- 10. 评分 ----------
+// ---------- 10. 评分与文字评价 ----------
 check('评分', (await call('POST', `/api/books/${bookA.id}/rate`, { token: tok.c, body: { score: 5 } })).data?.ok === true)
 const rating = await call('GET', `/api/books/${bookA.id}/rating`)
 check('评分写入并回填', Number(rating.data?.rating) === 5 && Number(rating.data?.count) >= 1)
+check('带文字评价', (await call('POST', `/api/books/${bookA.id}/rate`, { token: tok.c, body: { score: 4, comment: '成色不错，发货也快' } })).data?.ok === true)
+const reviews = await call('GET', `/api/books/${bookA.id}/reviews`)
+check('评价列表返回文字内容', reviews.data?.list?.some((r) => String(r.comment).includes('成色不错')))
 
 // ---------- 11. 交换 ----------
 const swapBad = await call('POST', '/api/swaps', {
