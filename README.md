@@ -32,6 +32,7 @@
 - 图书详情：成色、评分与文字评价、收藏、加入购物车、立即购买
 - 上架二手书：渐变封面或上传图片（前端裁剪 + 后端压缩），默认进入审核
 - 我的发布 / 我的收藏 / 购物车 / 我的订单 / 订单详情
+- 个人中心：修改资料、更换头像、修改密码（校验原密码）
 - 订单全流程：待付款 → 待发货 → 已发货 → 已签收 → 已完成，支持取消与退货
 - 卖家视角：查看「我卖出的」订单并直接发货
 - 以书换书：双方各自确认后完成交换，图书归属自动互换
@@ -54,7 +55,7 @@
 | 构建 | Vite 8 |
 | 后端 | Node.js + Express 4、mysql2 连接池、JWT、bcryptjs、Multer、Sharp |
 | 数据库 | MySQL 8（InnoDB、utf8mb4），11 张表 |
-| 测试 | 57 项接口冒烟脚本（`server/scripts/smoke.mjs`），GitHub Actions 自动运行 |
+| 测试 | 60 项接口冒烟脚本（`server/scripts/smoke.mjs`），GitHub Actions 自动运行 |
 
 ## 架构
 
@@ -134,6 +135,23 @@ npm run serve      # 后端同时托管前端，访问 http://localhost:3000
 
 也可以 `npm run start:prod` 一步完成构建 + 启动。后端检测到 `dist/index.html` 后会自动托管静态资源，并对 `/books/1` 这类前端路由做回退。
 
+### 6. 让手机 / 其他电脑访问
+
+同一 Wi-Fi 下可以直接用局域网地址打开：
+
+```powershell
+ipconfig                       # 找到「IPv4 地址」，例如 192.168.1.8
+# 手机浏览器打开 http://192.168.1.8:3000
+```
+
+首次需要在管理员 PowerShell 放行端口：
+
+```powershell
+netsh advfirewall firewall add rule name="Shuyi 3000" dir=in action=allow protocol=TCP localport=3000
+```
+
+汇总目录里的 `启动-局域网.bat` 会自动打印可用地址。
+
 ## 账号
 
 | 角色 | 账号 | 密码 |
@@ -177,13 +195,15 @@ book-management/
 │   ├── config.js           # 环境变量与配置
 │   ├── init-db.js          # 建库建表 + 导入种子数据
 │   └── books.json          # 489 本种子图书
-├── docs/                   # 接口文档、截图
+├── docs/                   # 接口文档、部署指南、截图
+├── Dockerfile              # 生产镜像
+├── docker-compose.yml      # 应用 + MySQL 一键启动
 └── vite.config.js
 ```
 
 ## 测试
 
-冒烟测试覆盖鉴权、审核、下单计价、库存回滚、越权访问、私信、论坛、评分、交换等 57 项断言，脚本自带测试数据并自动清理。
+冒烟测试覆盖鉴权、审核、下单计价、库存回滚、越权访问、私信、论坛、评分、交换等 60 项断言，脚本自带测试数据并自动清理。
 
 GitHub Actions 会在 MySQL 8 容器里自动执行同一套测试（见 `.github/workflows/ci.yml`）。
 
@@ -227,8 +247,14 @@ $env:SMOKE_BASE='http://localhost:3100'; npm run smoke
 - 文字评价暂无敏感词过滤与人工审核；
 - 支付为模拟流程，未接入真实支付渠道；
 - 图片存本地磁盘，未接入对象存储；
-- 尚未接入 Vitest 等测试框架，目前用 57 项接口冒烟脚本 + GitHub Actions 兜底；
+- 尚未接入 Vitest 等测试框架，目前用 60 项接口冒烟脚本 + GitHub Actions 兜底；
 - 限流是单机内存实现，多实例部署需要换成共享存储。
+
+## 部署
+
+生产模式下一进程即可：`npm run build && npm run serve`（或 `npm start:prod`），访问 `http://localhost:3000`。
+
+局域网、云服务器 + Nginx + HTTPS、Railway/Render、Docker Compose 四种方式见 [docs/DEPLOY.md](./docs/DEPLOY.md)，仓库已带 `Dockerfile`、`docker-compose.yml`、`.dockerignore`。
 
 ## 生产环境注意事项
 
