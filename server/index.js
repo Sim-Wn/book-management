@@ -58,6 +58,16 @@ app.get('/api/health', (req, res) => res.json({ ok: true }))
 
 app.use('/api', (req, res) => res.status(404).json({ ok: false, msg: '接口不存在' }))
 
+// 生产模式：前端构建产物存在时由后端直接托管，一个端口就能访问整个站点
+const distDir = path.join(__dirname, '..', 'dist')
+if (fs.existsSync(path.join(distDir, 'index.html'))) {
+  app.use(express.static(distDir, { maxAge: '1h', index: false }))
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next()
+    res.sendFile(path.join(distDir, 'index.html'))
+  })
+}
+
 app.use((err, req, res, _next) => {
   console.error('未处理异常:', err)
   res.status(500).json({ ok: false, msg: '服务器内部错误' })
@@ -66,4 +76,9 @@ app.use((err, req, res, _next) => {
 app.listen(config.port, () => {
   console.log(`书易后端运行在 http://localhost:${config.port}`)
   console.log(`数据库: ${config.db.user}@${config.db.host}:${config.db.port}/${config.db.database}`)
+  if (fs.existsSync(path.join(distDir, 'index.html'))) {
+    console.log(`前端: 已托管 dist 构建产物，直接打开 http://localhost:${config.port}`)
+  } else {
+    console.log('前端: 未找到 dist，开发模式请另开终端执行 npm run dev')
+  }
 })

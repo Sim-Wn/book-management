@@ -112,16 +112,27 @@ npm run init-db
 
 ### 5. 启动
 
+**开发模式**（改代码即时热更新，需要两个终端）
+
 ```bash
-# 终端 1：后端（默认 3000 端口）
+# 终端 1：后端（3000）
 cd server
 npm start
 
-# 终端 2：前端（默认 5173 端口）
+# 终端 2：前端（5173）
 npm run dev
 ```
 
 打开 <http://localhost:5173>。
+
+**生产模式**（单端口，一个终端即可）
+
+```bash
+npm run build      # 生成 dist/
+npm run serve      # 后端同时托管前端，访问 http://localhost:3000
+```
+
+也可以 `npm run start:prod` 一步完成构建 + 启动。后端检测到 `dist/index.html` 后会自动托管静态资源，并对 `/books/1` 这类前端路由做回退。
 
 ## 账号
 
