@@ -15,8 +15,10 @@ if (!/^[A-Za-z0-9_]+$/.test(DB_NAME)) {
 
 async function init() {
   console.log(`正在连接 MySQL (${config.db.user}@${config.db.host}:${config.db.port})...`)
+  // 首次初始化时数据库还不存在，连接配置里不能带 database 字段
+  const { database, ...connConfig } = config.db
   const conn = await mysql.createConnection({
-    ...config.db,
+    ...connConfig,
     multipleStatements: true,
   })
 
