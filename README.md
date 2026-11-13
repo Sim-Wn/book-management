@@ -4,6 +4,8 @@
 
 > Vue 3 · Element Plus · Pinia · Express · MySQL 8 · JWT
 
+**English** — Shuyi is a campus second-hand book marketplace (browse, sell, swap, message and forum) with a separate admin console. Vue 3 + Element Plus front end, Express + MySQL back end, JWT authentication, server-authoritative pricing and stock, and a 49-assertion API smoke test that also runs in CI.
+
 ## 界面预览
 
 <p align="center">
@@ -47,7 +49,7 @@
 | 构建 | Vite 8 |
 | 后端 | Node.js + Express 4、mysql2 连接池、JWT、bcryptjs、Multer、Sharp |
 | 数据库 | MySQL 8（InnoDB、utf8mb4），11 张表 |
-| 测试 | 无框架依赖的接口冒烟脚本（`server/scripts/smoke.mjs`） |
+| 测试 | 49 项接口冒烟脚本（`server/scripts/smoke.mjs`），GitHub Actions 自动运行 |
 
 ## 架构
 
@@ -69,7 +71,7 @@ flowchart LR
 
 ### 1. 环境要求
 
-- Node.js **>= 18.17**（推荐 20 LTS 及以上）
+- Node.js **20.19+ 或 22.12+**（Vite 8 的要求，推荐 22 LTS）
 - MySQL **8.0+**，需要能用账号密码登录
 
 ### 2. 安装依赖
@@ -139,6 +141,7 @@ npm run dev
 | `DB_NAME` | `shuyi` | 数据库名 |
 | `JWT_SECRET` | 开发用默认值 | 生产环境必须设置，否则启动会报错 |
 | `BOOK_REVIEW` | `1` | 用户发布的书是否需要管理员审核 |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | 允许跨域的前端地址，逗号分隔 |
 
 ## 目录结构
 
@@ -166,6 +169,10 @@ book-management/
 
 冒烟测试覆盖鉴权、审核、下单计价、库存回滚、越权访问、私信、论坛、评分、交换等 49 项断言，脚本自带测试数据并自动清理。
 
+GitHub Actions 会在 MySQL 8 容器里自动执行同一套测试（见 `.github/workflows/ci.yml`）。
+
+**macOS / Linux / Git Bash**
+
 ```bash
 # 建议用独立的测试库，不要动真实数据
 cd server
@@ -175,6 +182,18 @@ DB_NAME=shuyi_test PORT=3100 npm start
 # 另开终端
 cd server
 SMOKE_BASE=http://localhost:3100 npm run smoke
+```
+
+**Windows PowerShell**
+
+```powershell
+cd server
+$env:DB_NAME='shuyi_test'; npm run init-db
+$env:DB_NAME='shuyi_test'; $env:PORT='3100'; npm start
+
+# 另开终端
+cd server
+$env:SMOKE_BASE='http://localhost:3100'; npm run smoke
 ```
 
 ## 安全设计
@@ -191,7 +210,17 @@ SMOKE_BASE=http://localhost:3100 npm run smoke
 - 支付为模拟流程，未接入真实支付渠道；
 - 图片存本地磁盘，未接入对象存储；
 - 列表接口暂未分页（数据量约 500 本，暂可接受）；
-- 未接入自动化测试框架与 CI。
+- 尚未接入 Vitest 等测试框架，目前用 49 项接口冒烟脚本 + GitHub Actions 兜底；
+- 限流是单机内存实现，多实例部署需要换成 Redis 等共享存储。
+
+## 生产环境注意事项
+
+- 必须通过环境变量设置 `JWT_SECRET`（`NODE_ENV=production` 时缺失会拒绝启动）；
+- 用 `CORS_ORIGINS` 把允许的前端地址收敛到实际域名；
+- 前端构建产物交给 Nginx 等静态服务器，后端只暴露 `/api` 与 `/uploads`，并开启 HTTPS；
+- 修改默认管理员密码（`admin / 123456` 仅用于本地演示）；
+- 上传目录需要持久化，或把 `routes/upload.js` 换成对象存储；
+- 支付是模拟流程，接入真实支付前不要上线交易功能。
 
 ## 上传到 GitHub
 
