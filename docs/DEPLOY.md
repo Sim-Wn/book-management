@@ -79,20 +79,39 @@ sudo certbot --nginx -d 你的域名     # 自动配置 HTTPS
 - [ ] MySQL 3306 不对公网开放
 - [ ] 已配置数据库定时备份
 
-## 方式三：PaaS（Railway / Render）
+## 方式三：Railway（推荐，最快）
 
-适合不想维护服务器的情况：
+1. 先把仓库推到 GitHub
+2. Railway → **New Project → Deploy from GitHub repo**，选中仓库
+   （仓库里有 `railway.json`，构建/启动命令和健康检查已配好，不用手填）
+3. 在项目里 **Add → Database → MySQL**
+4. 打开应用服务的 **Variables**，添加：
 
-1. 把仓库推到 GitHub
-2. Railway 新建项目 → Deploy from GitHub
-3. 添加 MySQL 插件，把 `DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_NAME` 注入到应用环境变量
-4. 设置：
-   - Build Command：`npm ci && cd server && npm ci && cd .. && npm run build`
-   - Start Command：`node server/index.js`
-   - 环境变量：`JWT_SECRET`、`CORS_ORIGINS=https://你的域名`
-5. 首次部署后，在 Railway 的 Shell 里执行 `cd server && node init-db.js`
+| 变量 | 值 |
+|---|---|
+| `MYSQL_URL` | `${{MySQL.MYSQL_URL}}`（引用 MySQL 服务的连接串） |
+| `JWT_SECRET` | 随机 32 位以上字符串 |
+| `CORS_ORIGINS` | 部署出来的域名，例如 `https://shuyi-production.up.railway.app` |
 
-> 免费套餐通常会休眠，第一次访问可能较慢；生产使用建议付费实例。
+> 后端已支持 `MYSQL_URL` / `DATABASE_URL`，会自动解析成 host/port/user/password/database，不需要再手填 5 个变量。
+
+5. **Settings → Networking → Generate Domain**，拿到公网地址
+6. 首次部署完成后，在服务 **Shell** 里初始化数据库：
+   ```bash
+   cd server && node init-db.js
+   ```
+7. 打开域名，用 `admin / 123456` 登录后立刻改密码
+
+> 免费额度有限，长时间不用会休眠；演示够用。上传的图片存在容器磁盘，重新部署会丢，正式用建议挂 Volume 或换对象存储。
+
+## 方式三补充：Render（可零成本，但会休眠）
+
+1. Railway 之外的选择：Render 新建 **Web Service**，连接 GitHub 仓库
+2. Build Command：`npm ci && cd server && npm ci && cd .. && npm run build`
+3. Start Command：`node server/index.js`
+4. 数据库用外部免费 MySQL（Aiven / TiDB Cloud），把连接串填到 `DATABASE_URL`
+5. 另外设置 `JWT_SECRET`、`CORS_ORIGINS`
+6. 部署后在 Render Shell 执行 `cd server && node init-db.js`
 
 ## 方式四：Docker Compose（VPS 一键）
 
@@ -116,5 +135,6 @@ docker compose run --rm app node server/init-db.js
 | `JWT_SECRET` | 32 位以上随机字符串，必须设置 |
 | `CORS_ORIGINS` | 只写正式域名，逗号分隔 |
 | `DB_*` | 使用独立数据库账号，不要用 root |
+| `MYSQL_URL` / `DATABASE_URL` | 云平台连接串；存在时自动解析，优先级低于单独设置的 `DB_*` |
 | `BOOK_REVIEW` | 保持 1，用户发书先审核 |
 | `PORT` | 反向代理后一般保持 3000 |

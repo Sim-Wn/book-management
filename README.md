@@ -175,6 +175,7 @@ netsh advfirewall firewall add rule name="Shuyi 3000" dir=in action=allow protoc
 | `DB_NAME` | `shuyi` | 数据库名 |
 | `JWT_SECRET` | 开发用默认值 | 生产环境必须设置，否则启动会报错 |
 | `BOOK_REVIEW` | `1` | 用户发布的书是否需要管理员审核 |
+| `MYSQL_URL` / `DATABASE_URL` | — | 云平台数据库连接串，存在时自动解析（Railway 用 `${{MySQL.MYSQL_URL}}`） |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | 允许跨域的前端地址，逗号分隔 |
 
 ## 目录结构
@@ -279,7 +280,7 @@ npm run fix:data -- --apply     # 执行修复
 
 生产模式下一进程即可：`npm run build && npm run serve`（或 `npm start:prod`），访问 `http://localhost:3000`。
 
-局域网、云服务器 + Nginx + HTTPS、Railway/Render、Docker Compose 四种方式见 [docs/DEPLOY.md](./docs/DEPLOY.md)，仓库已带 `Dockerfile`、`docker-compose.yml`、`.dockerignore`。
+局域网、云服务器 + Nginx + HTTPS、Railway（推荐）、Render、Docker Compose 见 [docs/DEPLOY.md](./docs/DEPLOY.md)。仓库已带 `railway.json`、`Dockerfile`、`docker-compose.yml`、`.dockerignore`，部署平台不用手写构建命令。
 
 ## 生产环境注意事项
 

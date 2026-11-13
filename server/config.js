@@ -31,15 +31,37 @@ loadEnv()
 
 const DEV_JWT_SECRET = 'shuyi-dev-secret-change-me'
 
+// 云平台（Railway / Render / Aiven 等）通常只给一个连接串，这里统一解析成 mysql2 需要的字段
+function parseDbUrl(raw) {
+  if (!raw) return {}
+  try {
+    const u = new URL(raw)
+    if (!/^mysql:?/.test(u.protocol)) return {}
+    return {
+      host: u.hostname,
+      port: Number(u.port) || 3306,
+      user: u.username ? decodeURIComponent(u.username) : undefined,
+      password: u.password ? decodeURIComponent(u.password) : undefined,
+      database: u.pathname.replace(/^\//, '') || undefined,
+    }
+  } catch {
+    return {}
+  }
+}
+
+const dbUrl = parseDbUrl(process.env.MYSQL_URL || process.env.DATABASE_URL)
+const dbPassword =
+  process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : (dbUrl.password ?? 'root')
+
 export const config = {
   port: Number(process.env.PORT) || 3000,
   jwtSecret: process.env.JWT_SECRET || DEV_JWT_SECRET,
   db: {
-    host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD ?? 'root',
-    database: process.env.DB_NAME || 'shuyi',
+    host: process.env.DB_HOST || dbUrl.host || 'localhost',
+    port: Number(process.env.DB_PORT) || dbUrl.port || 3306,
+    user: process.env.DB_USER || dbUrl.user || 'root',
+    password: dbPassword,
+    database: process.env.DB_NAME || dbUrl.database || 'shuyi',
     charset: 'utf8mb4',
     waitForConnections: true,
     connectionLimit: 10,
