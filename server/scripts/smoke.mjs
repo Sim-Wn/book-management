@@ -218,6 +218,11 @@ check('带文字评价', (await call('POST', `/api/books/${bookA.id}/rate`, { to
 const reviews = await call('GET', `/api/books/${bookA.id}/reviews`)
 check('评价列表返回文字内容', reviews.data?.list?.some((r) => String(r.comment).includes('成色不错')))
 
+// ---------- 10.5 修改密码 ----------
+check('原密码错误时拒绝改密', (await call('PUT', '/api/auth/password', { token: tok.a, body: { oldPassword: 'wrong-pass', newPassword: 'smoke654321' } })).data?.ok === false)
+check('修改密码成功', (await call('PUT', '/api/auth/password', { token: tok.a, body: { oldPassword: PASSWORD, newPassword: 'smoke654321' } })).data?.ok === true)
+check('新密码可以登录', (await login(names.a, 'smoke654321'))?.ok === true)
+
 // ---------- 11. 交换 ----------
 const swapBad = await call('POST', '/api/swaps', {
   token: tok.c,

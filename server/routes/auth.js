@@ -154,4 +154,22 @@ router.delete('/users/:id', adminOnly, async (req, res) => {
   } finally { conn.release() }
 })
 
+// 修改密码：需要原密码校验
+router.put('/password', authRequired, async (req, res) => {
+  const { oldPassword, newPassword } = req.body || {}
+  if (!newPassword || String(newPassword).length < 6) return res.json({ ok: false, msg: '新密码至少 6 位' })
+  try {
+    const [[user]] = await pool.query('SELECT passwd FROM users WHERE id=?', [req.user.id])
+    if (!user) return res.status(401).json({ ok: false, msg: '账号不存在' })
+    const valid = await bcrypt.compare(oldPassword || '', user.passwd)
+    if (!valid) return res.json({ ok: false, msg: '原密码不正确' })
+    const hash = await bcrypt.hash(String(newPassword), 10)
+    await pool.query('UPDATE users SET passwd=? WHERE id=?', [hash, req.user.id])
+    res.json({ ok: true })
+  } catch (e) {
+    console.error('PUT /password error:', e.message)
+    res.status(500).json({ ok: false, msg: '修改失败' })
+  }
+})
+
 export default router

@@ -38,6 +38,7 @@ export const api = {
   register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request('/auth/me'),
   updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  updatePassword: (data) => request('/auth/password', { method: 'PUT', body: JSON.stringify(data) }),
   getUsers: () => request('/auth/users'),
   toggleUser: (id) => request('/auth/users/' + id + '/toggle', { method: 'PUT' }),
   deleteUser: (id) => request('/auth/users/' + id, { method: 'DELETE' }),
