@@ -220,18 +220,38 @@ router.get('/:id/rating', async (req, res) => {
 })
 
 router.post('/:id/rate', authRequired, async (req, res) => {
-  const { score } = req.body || {}
+  const { score, comment } = req.body || {}
   if (!score || score < 1 || score > 5) return res.status(400).json({ ok: false, msg: '评分需在 1-5 之间' })
+  const text = comment ? String(comment).trim().slice(0, 500) : ''
   try {
-    await pool.query('INSERT INTO ratings (user_id,book_id,score) VALUES (?,?,?) ON DUPLICATE KEY UPDATE score=?', [
-      req.user.id, req.params.id, score, score,
-    ])
+    await pool.query(
+      'INSERT INTO ratings (user_id,book_id,score,comment) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE score=?, comment=?',
+      [req.user.id, req.params.id, score, text, score, text]
+    )
     const [avg] = await pool.query('SELECT ROUND(AVG(score),1) as avg FROM ratings WHERE book_id=?', [req.params.id])
     await pool.query('UPDATE books SET rating=? WHERE id=?', [avg[0].avg, req.params.id])
     res.json({ ok: true, rating: avg[0].avg })
   } catch (e) {
     console.error('POST rate error:', e.message)
     res.status(500).json({ ok: false, msg: '评分失败' })
+  }
+})
+
+// 带文字内容的评价列表
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const [list] = await pool.query(
+      `SELECT r.score, r.comment, r.created_at, u.username
+       FROM ratings r LEFT JOIN users u ON u.id = r.user_id
+       WHERE r.book_id=? AND r.comment IS NOT NULL AND r.comment <> ''
+       ORDER BY r.id DESC LIMIT 20`,
+      [req.params.id]
+    )
+    const [[stat]] = await pool.query('SELECT COUNT(*) AS c FROM ratings WHERE book_id=?', [req.params.id])
+    res.json({ total: stat.c, list })
+  } catch (e) {
+    console.error('GET /books/:id/reviews error:', e.message)
+    res.json({ total: 0, list: [] })
   }
 })
 

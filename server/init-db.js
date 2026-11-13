@@ -107,6 +107,7 @@ async function init() {
     user_id INT NOT NULL,
     book_id INT NOT NULL,
     score TINYINT NOT NULL,
+    comment VARCHAR(500) DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_user_book (user_id, book_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

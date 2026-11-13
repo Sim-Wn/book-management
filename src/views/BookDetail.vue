@@ -28,6 +28,31 @@
               <span v-if="myScore" class="my-label">我的评分: {{ myScore }}分</span>
             </div>
           </div>
+
+          <div class="reviews">
+            <div class="rv-head">
+              <h3>读者评价</h3>
+              <span class="rv-sub" v-if="reviews.total">{{ reviews.total }} 人评分<template v-if="reviews.list.length"> · {{ reviews.list.length }} 条文字评价</template></span>
+            </div>
+            <div class="rv-form" v-if="auth.isLoggedIn">
+              <el-input v-model="reviewText" type="textarea" :rows="2" maxlength="200" show-word-limit placeholder="写下你的阅读感受（可选，最多 200 字）" />
+              <div class="rv-actions">
+                <span class="rv-score">评分：{{ myScore || 5 }} 星</span>
+                <el-button type="primary" size="small" :loading="submittingReview" @click="submitReview">提交评价</el-button>
+              </div>
+            </div>
+            <div v-if="reviews.list.length" class="rv-list">
+              <div v-for="(rv, i) in reviews.list" :key="i" class="rv-item">
+                <div class="rv-top">
+                  <strong>{{ rv.username || '匿名读者' }}</strong>
+                  <span class="rv-stars">{{ '★'.repeat(rv.score) }}</span>
+                  <span class="rv-time">{{ formatDate(rv.created_at) }}</span>
+                </div>
+                <p>{{ rv.comment }}</p>
+              </div>
+            </div>
+            <el-empty v-else :image-size="50" description="还没有文字评价，来做第一个" />
+          </div>
           <div class="seller"><span>卖家：{{ book.seller_name }}</span><el-button v-if="book.seller_id && auth.user?.id !== book.seller_id" text size="small" type="primary" @click="$router.push('/messages/'+book.seller_id)" class="pm-btn">💬 私信</el-button><span>上架：{{ formatDate(book.listed_at || book.listedAt) }}</span></div>
           <div class="acts" v-if="book.status==='在售'"><el-button type="primary" size="large" @click="addCart">加入购物车</el-button><el-button size="large" @click="openBuyDlg">立即购买</el-button><el-button size="large" @click="showSwapDlg=true" class="swap-btn">🔄 发起交换</el-button></div>
           <el-tag v-else type="info" size="large">{{ book.status==='已交换'?'该图书已被交换':book.status==='已售罄'?'该图书已售罄':'该图书已下架' }}</el-tag>
@@ -87,6 +112,9 @@ const ratingInfo = ref({ rating: 0, count: 0, mine: null })
 const myScore = ref(0); const hoverScore = ref(0)
 const showSwapDlg = ref(false); const swapBookId = ref(null); const myBooks = ref([])
 const buyDlg = reactive({ vis: false, addr: '', phone: '', loading: false })
+const reviews = ref({ total: 0, list: [] })
+const reviewText = ref('')
+const submittingReview = ref(false)
 onMounted(async ()=>{
   loading.value = true
   try { book.value = await api.getBook(route.params.id) } catch { book.value = bookStore.getBook(route.params.id) }
@@ -98,6 +126,7 @@ onMounted(async ()=>{
     ratingInfo.value = r
     myScore.value = r.mine || 0
   } catch {}
+  try { reviews.value = await api.getReviews(route.params.id) } catch {}
   if (auth.isLoggedIn) {
     const all = bookStore.getUserBooks(auth.userName)
     myBooks.value = all.filter(b => b.status === '在售' && b.id !== book.value?.id)
@@ -139,6 +168,24 @@ async function rateBook(score) {
     if (!ratingInfo.value.count) ratingInfo.value.count = 1
     ElMessage.success('评分成功')
   } catch { ElMessage.error('评分失败') }
+}
+
+async function submitReview() {
+  if (!auth.isLoggedIn) { ElMessage.warning('请先登录'); return }
+  submittingReview.value = true
+  try {
+    const score = myScore.value || 5
+    const r = await api.rateBook(book.value.id, { score, comment: reviewText.value.trim() })
+    ratingInfo.value.rating = r.rating
+    myScore.value = score
+    reviewText.value = ''
+    reviews.value = await api.getReviews(book.value.id)
+    ElMessage.success('评价已提交')
+  } catch (e) {
+    ElMessage.error(e.message || '提交失败')
+  } finally {
+    submittingReview.value = false
+  }
 }
 async function doSwap() {
   if (!auth.isLoggedIn) { ElMessage.warning('请先登录'); return }
@@ -196,6 +243,21 @@ async function doSwap() {
 .rating-cnt { font-size: 12px; color: var(--text-muted); margin-left: 4px; }
 .my-label { font-size: 12px; color: var(--primary); margin-left: 8px; font-weight: 500; }
 .seller { background: var(--bg); padding: 10px 14px; border-radius: 8px; display: flex; gap: 24px; align-items: center; font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+
+/* 读者评价 */
+.reviews { border-top: 1px solid var(--border); padding-top: 16px; margin-bottom: 18px; }
+.rv-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.rv-head h3 { margin: 0; font-size: 16px; color: var(--text); }
+.rv-sub { font-size: 12px; color: var(--text-muted); }
+.rv-form { margin-bottom: 12px; }
+.rv-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 8px; }
+.rv-score { font-size: 12px; color: var(--text-muted); }
+.rv-list { display: flex; flex-direction: column; gap: 10px; }
+.rv-item { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+.rv-top { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.rv-top strong { color: var(--text); font-size: 13px; }
+.rv-stars { color: #f59e0b; letter-spacing: 1px; }
+.rv-item p { margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
 .pm-btn { margin-left: -12px; }
 .acts { display: flex; gap: 12px; }
 .swap-btn { border-color: var(--accent); color: var(--accent); }

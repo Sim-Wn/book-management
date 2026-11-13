@@ -9,6 +9,7 @@
     "dev": "node --watch index.js",
     "init-db": "node init-db.js",
     "smoke": "node scripts/smoke.mjs",
+    "migrate:rating": "node scripts/migrate-ratings-comment.mjs",
     "recalc-sales": "node scripts/recalc-sales.mjs"
   },
   "dependencies": {
