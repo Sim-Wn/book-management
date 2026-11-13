@@ -55,7 +55,7 @@
 | 构建 | Vite 8 |
 | 后端 | Node.js + Express 4、mysql2 连接池、JWT、bcryptjs、Multer、Sharp |
 | 数据库 | MySQL 8（InnoDB、utf8mb4），11 张表 |
-| 测试 | 60 项接口冒烟脚本（`server/scripts/smoke.mjs`），GitHub Actions 自动运行 |
+| 测试 | 11 项 Vitest 集成测试 + 60 项接口冒烟脚本，GitHub Actions 自动运行 |
 
 ## 架构
 
@@ -191,6 +191,7 @@ book-management/
 ├── server/                 # 后端源码
 │   ├── routes/             # 路由：auth / books / orders / swaps / messages / forum / categories / upload / stats
 │   ├── middleware/         # JWT 鉴权、限流
+│   ├── test/               # Vitest 集成测试
 │   ├── scripts/            # 冒烟测试、历史数据修正
 │   ├── config.js           # 环境变量与配置
 │   ├── init-db.js          # 建库建表 + 导入种子数据
@@ -203,7 +204,17 @@ book-management/
 
 ## 测试
 
-冒烟测试覆盖鉴权、审核、下单计价、库存回滚、越权访问、私信、论坛、评分、交换等 60 项断言，脚本自带测试数据并自动清理。
+测试分两层：
+
+- **Vitest + Supertest 集成测试**（11 项）：直接挂载 Express app，覆盖健康检查、分页、鉴权、404、注册/登录/改密流程；
+- **接口冒烟脚本**（60 项）：真实启动服务后跑完整业务流，覆盖鉴权、审核、下单计价、库存回滚、越权访问、私信、论坛、评分、交换。
+
+```bash
+cd server
+npm test        # Vitest（使用 shuyi_test 库，需要先初始化）
+```
+
+冒烟脚本的用法见下方命令。
 
 GitHub Actions 会在 MySQL 8 容器里自动执行同一套测试（见 `.github/workflows/ci.yml`）。
 
@@ -247,7 +258,7 @@ $env:SMOKE_BASE='http://localhost:3100'; npm run smoke
 - 文字评价暂无敏感词过滤与人工审核；
 - 支付为模拟流程，未接入真实支付渠道；
 - 图片存本地磁盘，未接入对象存储；
-- 尚未接入 Vitest 等测试框架，目前用 60 项接口冒烟脚本 + GitHub Actions 兜底；
+- 集成测试覆盖核心接口，业务分支与前端组件测试尚未全覆盖；
 - 限流是单机内存实现，多实例部署需要换成共享存储。
 
 ## 部署

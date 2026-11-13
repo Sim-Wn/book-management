@@ -74,6 +74,9 @@ jobs:
       - name: 初始化测试库
         working-directory: server
         run: npm run init-db
+      - name: 集成测试（Vitest + Supertest）
+        working-directory: server
+        run: npm test
       - name: 启动后端并跑冒烟测试
         working-directory: server
         run: |
