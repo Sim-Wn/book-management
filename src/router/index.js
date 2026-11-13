@@ -38,6 +38,8 @@ const routes = [
       { path: 'sales', component: () => import('@/admin/Sales.vue') },
     ],
   },
+
+  { path: '/:pathMatch(.*)*', component: () => import('@/views/NotFound.vue') },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })

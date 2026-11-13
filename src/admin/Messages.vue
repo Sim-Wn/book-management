@@ -34,7 +34,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="时间" width="160"/>
+        <el-table-column label="时间" width="160"><template #default="{ row: r }">{{ formatDateTime(r.created_at) }}</template></el-table-column>
       </el-table>
       <el-empty v-else :image-size="50" description="暂无消息"/>
     </el-card>
@@ -44,6 +44,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { api } from '@/api'
+import { formatDateTime } from '@/utils/format'
 const messages = ref([])
 const filterId = ref('')
 const filterType = ref('all')

@@ -87,6 +87,8 @@ const buyDlg = reactive({ vis: false, addr: '', phone: '', loading: false })
 onMounted(async ()=>{
   loading.value = true
   try { book.value = await api.getBook(route.params.id) } catch { book.value = bookStore.getBook(route.params.id) }
+  // 直接打开详情页时列表还没加载，先补一次，相关推荐和换书列表才能出来
+  if (!bookStore.books.length) { try { await bookStore.fetchBooks() } catch {} }
   if (auth.isLoggedIn) { await auth.loadFavorites(); isFav.value = auth.isFavorite(book.value?.id) }
   try {
     const r = await api.getRating(route.params.id, auth.user?.id)

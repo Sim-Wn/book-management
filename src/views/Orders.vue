@@ -20,7 +20,7 @@
           <template #header>
             <div class="oh">
               <span>订单号：{{ o.order_no }}</span>
-              <span>{{ o.created_at || o.createdAt }}</span>
+              <span>{{ formatDateTime(o.created_at || o.createdAt) }}</span>
               <el-tag :type="tagType(o.status)" size="small">{{ o.status }}</el-tag>
             </div>
           </template>
@@ -57,6 +57,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { useOrderStore } from '@/stores/order'
 import NavHeader from '@/components/NavHeader.vue'
+import { formatDateTime } from '@/utils/format'
 const auth = useAuthStore(); const orderStore = useOrderStore()
 const orderTab = ref('')
 const orders = computed(() => {

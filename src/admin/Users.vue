@@ -8,7 +8,7 @@
       <el-table :data="filtered" border stripe v-if="!load">
         <el-table-column prop="id" label="ID" width="60"/><el-table-column prop="username" label="用户名" width="110"/>
         <el-table-column prop="email" label="邮箱" min-width="150"/><el-table-column prop="phone" label="手机号" width="120"/>
-        <el-table-column prop="created_at" label="注册时间" width="160"/>
+        <el-table-column label="注册时间" width="160"><template #default="{ row: r }">{{ formatDateTime(r.created_at) }}</template></el-table-column>
         <el-table-column label="状态" width="70"><template #default="{ row: r }"><el-tag size="small" :type="r.disabled?'danger':'success'">{{r.disabled?'禁用':'正常'}}</el-tag></template></el-table-column>
         <el-table-column label="操作" width="140" fixed="right"><template #default="{ row: r }"><el-button text size="small" :type="r.disabled?'success':'warning'" @click="toggle(r.id)">{{r.disabled?'启用':'禁用'}}</el-button><el-button text size="small" type="danger" @click="del(r.id)">删除</el-button></template></el-table-column>
       </el-table>
@@ -21,6 +21,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import { formatDateTime } from '@/utils/format'
 const auth = useAuthStore(); const users = ref([]); const load = ref(false); const search = ref('')
 onMounted(async ()=>{ load.value=true; users.value = (await auth.getAllUsers()).sort((a,b)=>b.id-a.id); load.value=false })
 const filtered = computed(() => {
