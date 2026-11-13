@@ -49,7 +49,7 @@ async function doRegister() {
 <style scoped>
 .reg-page {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(-45deg, #064e3b, #065f46, #047857, #059669, #065f46);
+  background: linear-gradient(-45deg, #2a1c12, #3a2518, #4a3020, #5c3c28, #3a2518);
   background-size: 400% 400%; animation: bgFlow 20s ease infinite;
   position: relative; overflow: hidden;
 }
@@ -58,11 +58,11 @@ async function doRegister() {
 .sphere {
   position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.15;
 }
-.s1 { width: 500px; height: 500px; background: #10b981; top: -150px; right: -100px; animation: float1 12s ease-in-out infinite; }
-.s2 { width: 400px; height: 400px; background: #34d399; bottom: -120px; left: -80px; animation: float2 10s ease-in-out infinite; }
-.s3 { width: 300px; height: 300px; background: #fbbf24; top: 40%; left: 50%; animation: float3 14s ease-in-out infinite; }
-.s4 { width: 250px; height: 250px; background: #6ee7b7; top: 10%; left: 10%; animation: float1 8s ease-in-out infinite reverse; }
-.s5 { width: 200px; height: 200px; background: #fde68a; bottom: 20%; right: 20%; animation: float2 11s ease-in-out infinite reverse; }
+.s1 { width: 500px; height: 500px; background: #8b6040; top: -150px; right: -100px; animation: float1 12s ease-in-out infinite; }
+.s2 { width: 400px; height: 400px; background: #c08848; bottom: -120px; left: -80px; animation: float2 10s ease-in-out infinite; }
+.s3 { width: 300px; height: 300px; background: #d4a060; top: 40%; left: 50%; animation: float3 14s ease-in-out infinite; }
+.s4 { width: 250px; height: 250px; background: #6b4c38; top: 10%; left: 10%; animation: float1 8s ease-in-out infinite reverse; }
+.s5 { width: 200px; height: 200px; background: #a08068; bottom: 20%; right: 20%; animation: float2 11s ease-in-out infinite reverse; }
 @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-30px) scale(1.1)} 66%{transform:translate(-20px,20px) scale(0.9)} }
 @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-30px,-20px) scale(1.05)} 66%{transform:translate(20px,30px) scale(0.95)} }
 @keyframes float3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,40px) scale(1.1)} }
@@ -82,12 +82,12 @@ async function doRegister() {
   box-shadow: none !important; border-radius: 12px; transition: all 0.3s;
 }
 .glass-input :deep(.el-input__wrapper:hover) { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); }
-.glass-input :deep(.el-input__wrapper.is-focus) { border-color: #10b981; background: rgba(255,255,255,0.12); box-shadow: 0 0 0 2px rgba(16,185,129,0.2) !important; }
+.glass-input :deep(.el-input__wrapper.is-focus) { border-color: #c08848; background: rgba(255,255,255,0.12); box-shadow: 0 0 0 2px rgba(192,136,72,0.25) !important; }
 .glass-input :deep(.el-input__inner) { color: #fff; }
 .glass-input :deep(.el-input__inner::placeholder) { color: rgba(255,255,255,0.3); }
 .glass-input :deep(.el-input__prefix) { color: rgba(255,255,255,0.4); }
-.reg-btn { height: 48px; font-size: 16px; letter-spacing: 8px; font-weight: 700; border-radius: 14px; background: linear-gradient(135deg, #10b981, #34d399); border: none; }
-.reg-btn:hover { background: linear-gradient(135deg, #059669, #10b981); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+.reg-btn { width: 100%; height: 48px; font-size: 16px; letter-spacing: 8px; font-weight: 700; border-radius: 14px; background: linear-gradient(135deg, #8b6040, #c08848); border: none; }
+.reg-btn:hover { background: linear-gradient(135deg, #6b4c38, #8b6040); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(139,96,64,0.4); }
 .link { text-align: center; margin-top: 20px; font-size: 13px; }
 .link a { color: rgba(255,255,255,0.55); text-decoration: none; font-weight: 500; transition: color 0.2s; }
 .link a:hover { color: rgba(255,255,255,0.85); }
