@@ -27,7 +27,7 @@
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
-| GET | `/books` | 公开 | 列表，支持 `category`、`keyword`、`sort`（`price-asc` / `price-desc` / `sales` / `new`）、`status`、`seller_name` |
+| GET | `/books` | 公开 | 列表，支持 `category`、`keyword`、`sort`（`price-asc` / `price-desc` / `sales` / `new`）、`status`、`seller_name`；带 `page` / `pageSize` 时返回 `{ items, total, page, pageSize }`，否则返回数组 |
 | GET | `/books/categories` | 公开 | 数据库中已有的分类名列表 |
 | GET | `/books/:id` | 公开 | 详情 |
 | GET | `/books/cover/:id` | 公开 | 动态生成的 SVG 封面（无图片时兜底） |
@@ -37,14 +37,16 @@
 | GET | `/books/:id/favorites` | 本人或管理员 | 某用户的收藏 ID 列表（`:id` 为用户 ID） |
 | POST | `/books/:id/favorite` | 本人 | body：`{ bookId, add }` |
 | GET | `/books/:id/rating` | 公开 | 平均分、评分人数、`?user_id=` 时返回我的评分 |
-| POST | `/books/:id/rate` | 登录 | body：`{ score: 1-5 }`，每人每书一条，重复提交即修改 |
+| GET | `/books/:id/reviews` | 公开 | 带文字内容的评价列表（最多 20 条） |
+| POST | `/books/:id/rate` | 登录 | body：`{ score: 1-5, comment?: string }`，每人每书一条，重复提交即修改 |
 
 ## 订单
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
 | POST | `/orders` | 登录 | body：`{ address, phone, remark?, items: [{ book_id, quantity }] }` |
-| GET | `/orders` | 登录 | 普通用户仅返回自己的订单，管理员可查全部或按 `user_id` 过滤 |
+| GET | `/orders` | 登录 | 普通用户返回自己的订单；带 `role=seller` 返回「别人买我的书」；管理员可查全部或按 `user_id` 过滤 |
+| GET | `/orders/:id` | 登录 | 订单详情（买家 / 卖家 / 管理员），含明细与买家信息 |
 | PUT | `/orders/:id/status` | 买家 / 卖家 / 管理员 | body：`{ status }`，走状态机校验 |
 | POST | `/orders/:id/pay` | 买家 / 管理员 | 待付款 → 待发货 |
 | POST | `/orders/:id/cancel` | 买家 / 管理员 | 待付款、待发货 → 已取消，回滚库存 |
@@ -98,7 +100,7 @@
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
-| GET | `/forum/posts` | 公开 | 帖子列表，置顶优先 |
+| GET | `/forum/posts` | 公开 | 帖子列表，置顶优先；支持 `keyword`、`user_id`（我的帖子）、`page` / `pageSize` |
 | GET | `/forum/posts/:id` | 公开 | 详情 + 回复，访问计数 +1 |
 | POST | `/forum/posts` | 登录 | 发帖 |
 | PUT / DELETE | `/forum/posts/:id` | 作者 / 管理员 | 编辑 / 删除 |
