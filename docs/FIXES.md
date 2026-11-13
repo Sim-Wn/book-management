@@ -55,7 +55,7 @@
 | `README.md` 重写 | 功能、架构、启动步骤、环境变量、账号、测试、安全设计、已知限制 |
 | `docs/API.md` | 40+ 接口的权限、参数、状态机说明 |
 | `docs/RESUME.md` | 简历 bullet 草稿 + 面试追问清单 |
-| `server/scripts/smoke.mjs` | 57 项接口冒烟断言，自带测试数据并自动清理 |
+| `server/scripts/smoke.mjs` | 60 项接口冒烟断言，自带测试数据并自动清理 |
 | `.github/workflows/ci.yml` | GitHub Actions：前端 lint + 构建、后端依赖安装与语法检查 |
 | `LICENSE` | MIT |
 
