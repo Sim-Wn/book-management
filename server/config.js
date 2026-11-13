@@ -47,6 +47,11 @@ export const config = {
   },
   // 用户上架的书是否需要管理员审核后才出现在「在售」；设 BOOK_REVIEW=0 可关闭
   bookReview: (process.env.BOOK_REVIEW ?? '1') !== '0',
+  // 允许跨域访问后端的前端地址，逗号分隔
+  corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
 }
 
 if (process.env.NODE_ENV === 'production' && config.jwtSecret === DEV_JWT_SECRET) {
