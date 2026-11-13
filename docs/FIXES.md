@@ -57,6 +57,9 @@
 | `docs/RESUME.md` | 简历 bullet 草稿 + 面试追问清单 |
 | `server/test/api.test.js` | 11 项 Vitest + Supertest 集成测试，直接挂载 Express app |
 | `server/scripts/smoke.mjs` | 60 项接口冒烟断言，自带测试数据并自动清理 |
+| `server/scripts/audit-data.mjs` | 只读数据体检：一致性、缓存、金额、关联完整性 |
+| `server/scripts/backup-db.mjs` | 逻辑备份到带时间戳的备份库 |
+| `server/scripts/fix-data.mjs` | 数据修复（默认预览，`--apply` 写入） |
 | `.github/workflows/ci.yml` | GitHub Actions：前端 lint + 构建、后端依赖安装与语法检查 |
 | `LICENSE` | MIT |
 

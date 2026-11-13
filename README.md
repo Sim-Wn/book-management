@@ -192,7 +192,7 @@ book-management/
 │   ├── routes/             # 路由：auth / books / orders / swaps / messages / forum / categories / upload / stats
 │   ├── middleware/         # JWT 鉴权、限流
 │   ├── test/               # Vitest 集成测试
-│   ├── scripts/            # 冒烟测试、历史数据修正
+│   ├── scripts/            # 冒烟测试、数据体检/备份/修复
 │   ├── config.js           # 环境变量与配置
 │   ├── init-db.js          # 建库建表 + 导入种子数据
 │   └── books.json          # 489 本种子图书
@@ -242,6 +242,20 @@ $env:DB_NAME='shuyi_test'; $env:PORT='3100'; npm start
 cd server
 $env:SMOKE_BASE='http://localhost:3100'; npm run smoke
 ```
+
+## 数据维护
+
+内置三个只读/安全脚本，改数据前先备份：
+
+```bash
+cd server
+npm run audit:data              # 只读体检：分类、评分缓存、销量、订单金额、关联完整性
+npm run backup:db               # 逻辑备份到 shuyi_backup_时间戳 库
+npm run fix:data                # 预览修复项
+npm run fix:data -- --apply     # 执行修复
+```
+
+体检覆盖：图书状态/分类一致性、价格库存异常、评分缓存与明细、销量与已完成订单、订单金额与明细、收藏/明细/订单号等关联完整性、交换状态、论坛回复数、用户资料与文本编码。
 
 ## 安全设计
 

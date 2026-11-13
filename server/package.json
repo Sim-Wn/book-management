@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "shuyi-server",
   "version": "1.0.0",
   "private": true,
@@ -11,6 +11,9 @@
     "smoke": "node scripts/smoke.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "audit:data": "node scripts/audit-data.mjs",
+    "fix:data": "node scripts/fix-data.mjs",
+    "backup:db": "node scripts/backup-db.mjs",
     "migrate:rating": "node scripts/migrate-ratings-comment.mjs",
     "recalc-sales": "node scripts/recalc-sales.mjs"
   },
@@ -31,4 +34,3 @@
     "vitest": "^5.1.0"
   }
 }
-
