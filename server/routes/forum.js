@@ -10,7 +10,7 @@ async function usernameOf(userId) {
 }
 
 router.get('/posts', async (req, res) => {
-  const { user_id, keyword } = req.query
+  const { user_id, keyword, page, pageSize } = req.query
   try {
     const where = []
     const params = []
@@ -20,14 +20,18 @@ router.get('/posts', async (req, res) => {
       const k = `%${keyword}%`
       params.push(k, k)
     }
-    let sql = 'SELECT * FROM forum_posts'
-    if (where.length) sql += ' WHERE ' + where.join(' AND ')
-    sql += ' ORDER BY is_pinned DESC, updated_at DESC'
-    const [rows] = await pool.query(sql, params)
-    res.json(Array.isArray(rows) ? rows : [])
+    const whereSql = where.length ? ' WHERE ' + where.join(' AND ') : ''
+    const limit = Math.min(50, Math.max(1, Number(pageSize) || 10))
+    const current = Math.max(1, Number(page) || 1)
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM forum_posts${whereSql}`, params)
+    const [rows] = await pool.query(
+      `SELECT * FROM forum_posts${whereSql} ORDER BY is_pinned DESC, updated_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, (current - 1) * limit]
+    )
+    res.json({ items: rows, total, page: current, pageSize: limit })
   } catch (e) {
     console.error('GET /forum/posts error:', e.message)
-    res.json([])
+    res.json({ items: [], total: 0, page: 1, pageSize: 10 })
   }
 })
 

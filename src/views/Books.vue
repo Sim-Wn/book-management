@@ -4,7 +4,7 @@
     <div class="banner">
       <div class="banner-inner">
         <h1>📚 全部图书</h1>
-        <p>发现你的下一本好书 · 共 <strong>{{ list.length }}</strong> 本在售</p>
+        <p>发现你的下一本好书 · 共 <strong>{{ bookStore.total }}</strong> 本在售</p>
       </div>
     </div>
     <div class="wrap">
@@ -39,17 +39,18 @@
       </div>
       <div v-else-if="list.length">
         <el-row :gutter="16">
-          <el-col v-for="b in paged" :key="b.id" :xs="12" :sm="8" :md="6" :lg="4" style="margin-bottom:16px">
+          <el-col v-for="b in list" :key="b.id" :xs="12" :sm="8" :md="6" :lg="4" style="margin-bottom:16px">
             <BookCard :book="b"/>
           </el-col>
         </el-row>
-        <div class="pager" v-if="list.length > pageSize">
+        <div class="pager" v-if="bookStore.total > pageSize">
           <el-pagination
             background
             layout="prev, pager, next, total"
-            :total="list.length"
+            :total="bookStore.total"
             :page-size="pageSize"
             v-model:current-page="page"
+            @current-change="loadBooks(false)"
           />
         </div>
       </div>
@@ -73,15 +74,14 @@ const cat = ref('')
 const sort = ref('default')
 const loading = ref(true)
 
-const list = computed(() => bookStore.books.filter(b => b.status === '在售'))
+const list = computed(() => bookStore.books)
 const page = ref(1)
 const pageSize = 24
-const paged = computed(() => list.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 
-async function loadBooks() {
+async function loadBooks(resetPage = true) {
   loading.value = true
-  page.value = 1
-  const params = {}
+  if (resetPage) page.value = 1
+  const params = { status: '在售', page: page.value, pageSize }
   if (cat.value) params.category = cat.value
   if (route.query.q) params.keyword = route.query.q
   if (sort.value && sort.value !== 'default') params.sort = sort.value

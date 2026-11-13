@@ -4,6 +4,7 @@ import { api } from '@/api'
 
 export const useBookStore = defineStore('book', () => {
   const books = ref([])
+  const total = ref(0)
   const categories = ref([])
   const categoryList = ref([])
   const conditions = ['全新未拆封', '几乎全新', '轻微使用', '正常磨损']
@@ -12,7 +13,13 @@ export const useBookStore = defineStore('book', () => {
   async function fetchBooks(params = {}) {
     try {
       const data = await api.getBooks(params)
-      if (Array.isArray(data)) books.value = data
+      if (Array.isArray(data)) {
+        books.value = data
+        total.value = data.length
+      } else if (data && Array.isArray(data.items)) {
+        books.value = data.items
+        total.value = Number(data.total) || data.items.length
+      }
     } catch {}
   }
 
@@ -55,5 +62,5 @@ export const useBookStore = defineStore('book', () => {
     try { await api.deleteCategory(id); await fetchCategoryList() } catch {}
   }
 
-  return { books, categories, categoryList, conditions, icons, fetchBooks, fetchCategories, getBook, getUserBooks, addBook, updateBook, deleteBook, fetchCategoryList, createCategory, updateCategory, deleteCategory }
+  return { books, total, categories, categoryList, conditions, icons, fetchBooks, fetchCategories, getBook, getUserBooks, addBook, updateBook, deleteBook, fetchCategoryList, createCategory, updateCategory, deleteCategory }
 })

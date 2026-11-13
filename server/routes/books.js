@@ -56,25 +56,40 @@ router.get('/cover/:id', async (req, res) => {
 })
 
 router.get('/', async (req, res) => {
-  const { category, keyword, sort, status, seller_name } = req.query
+  const { category, keyword, sort, status, seller_name, page, pageSize } = req.query
   try {
-    let sql = 'SELECT * FROM books WHERE 1=1'
+    const where = ['1=1']
     const params = []
-    if (category) { sql += ' AND category=?'; params.push(category) }
-    if (status) { sql += ' AND status=?'; params.push(status) }
-    if (seller_name) { sql += ' AND seller_name=?'; params.push(seller_name) }
+    if (category) { where.push('category=?'); params.push(category) }
+    if (status) { where.push('status=?'); params.push(status) }
+    if (seller_name) { where.push('seller_name=?'); params.push(seller_name) }
     if (keyword) {
-      sql += ' AND (name LIKE ? OR author LIKE ? OR description LIKE ?)'
+      where.push('(name LIKE ? OR author LIKE ? OR description LIKE ?)')
       const k = `%${keyword}%`
       params.push(k, k, k)
     }
-    if (sort === 'price-asc') sql += ' ORDER BY price ASC'
-    else if (sort === 'price-desc') sql += ' ORDER BY price DESC'
-    else if (sort === 'sales') sql += ' ORDER BY sales DESC'
-    else if (sort === 'new') sql += ' ORDER BY id DESC'
-    else sql += ' ORDER BY sales DESC'
-    const [rows] = await pool.query(sql, params)
-    res.json(Array.isArray(rows) ? rows : [])
+    let orderSql = ' ORDER BY sales DESC'
+    if (sort === 'price-asc') orderSql = ' ORDER BY price ASC'
+    else if (sort === 'price-desc') orderSql = ' ORDER BY price DESC'
+    else if (sort === 'sales') orderSql = ' ORDER BY sales DESC'
+    else if (sort === 'new') orderSql = ' ORDER BY id DESC'
+
+    const whereSql = ' WHERE ' + where.join(' AND ')
+
+    // 不带 page 时保持旧行为返回数组（首页、档案页需要全量）；带 page 时返回分页对象
+    if (!(Number(page) > 0)) {
+      const [rows] = await pool.query(`SELECT * FROM books${whereSql}${orderSql}`, params)
+      return res.json(Array.isArray(rows) ? rows : [])
+    }
+
+    const limit = Math.min(60, Math.max(1, Number(pageSize) || 24))
+    const current = Math.max(1, Number(page))
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM books${whereSql}`, params)
+    const [rows] = await pool.query(
+      `SELECT * FROM books${whereSql}${orderSql} LIMIT ? OFFSET ?`,
+      [...params, limit, (current - 1) * limit]
+    )
+    res.json({ items: rows, total, page: current, pageSize: limit })
   } catch (e) {
     console.error('GET /books error:', e.message)
     res.json([])

@@ -13,8 +13,14 @@
         </el-select>
         <el-input v-model="search" placeholder="搜索书名/作者" size="small" clearable style="width:200px" :prefix-icon="Search"/>
       </div>
-      <el-table :data="filtered" border stripe v-if="!loading">
-        <el-table-column prop="id" label="ID" width="75"/><el-table-column prop="name" label="书名" min-width="150"/><el-table-column prop="seller_name" label="卖家" width="100"/><el-table-column prop="category" label="分类" width="100"/><el-table-column prop="price" label="售价" width="75"><template #default="{ row: r }">¥{{r.price}}</template></el-table-column><el-table-column prop="stock" label="库存" width="55"/><el-table-column prop="sales" label="销量" width="55"/>
+      <div class="batch" v-if="selection.length">
+        <span>已选 {{ selection.length }} 本</span>
+        <el-button size="small" type="success" @click="batchStatus('在售')">批量上架</el-button>
+        <el-button size="small" type="warning" @click="batchStatus('已下架')">批量下架</el-button>
+        <el-button size="small" type="danger" @click="batchDelete">批量删除</el-button>
+      </div>
+      <el-table :data="filtered" border stripe v-if="!loading" @selection-change="(s) => (selection = s)">
+        <el-table-column type="selection" width="42"/><el-table-column prop="id" label="ID" width="75"/><el-table-column prop="name" label="书名" min-width="150"/><el-table-column prop="seller_name" label="卖家" width="100"/><el-table-column prop="category" label="分类" width="100"/><el-table-column prop="price" label="售价" width="75"><template #default="{ row: r }">¥{{r.price}}</template></el-table-column><el-table-column prop="stock" label="库存" width="55"/><el-table-column prop="sales" label="销量" width="55"/>
         <el-table-column label="状态" width="90"><template #default="{ row: r }"><el-tag size="small" :type="statusTagType(r.status)">{{r.status}}</el-tag></template></el-table-column>
         <el-table-column label="操作" width="210" fixed="right"><template #default="{ row: r }"><el-button text size="small" v-if="r.status==='待审核'" type="success" @click="audit(r.id)">通过</el-button><el-button text size="small" v-if="r.status==='待审核'" type="warning" @click="reject(r.id)">驳回</el-button><el-button text size="small" @click="openEdit(r)">编辑</el-button><el-button text size="small" type="danger" @click="doDelete(r.id)">删除</el-button></template></el-table-column>
       </el-table>
@@ -41,6 +47,7 @@ import { useBookStore } from '@/stores/book'
 import ImageCropper from '@/components/ImageCropper.vue'
 const bookStore = useBookStore(); const cropVisible = ref(false)
 const tab = ref('all'); const loading = ref(false); const catFilter = ref(''); const search = ref('')
+const selection = ref([])
 onMounted(async ()=>{ loading.value=true; await bookStore.fetchBooks(); await bookStore.fetchCategories(); loading.value=false })
 const pendingCount = computed(()=> bookStore.books.filter(b=>b.status==='待审核').length)
 const filtered = computed(()=> {
@@ -60,6 +67,24 @@ async function doDelete(id){ElMessageBox.confirm('确定删除？','提示',{typ
 async function audit(id){ ElMessageBox.confirm('确定审核通过该书？','审核确认',{type:'success'}).then(async()=>{await bookStore.updateBook(id,{status:'在售'});ElMessage.success('审核通过')}).catch(()=>{}) }
 function statusTagType(s){const m={'在售':'success','待审核':'warning','已驳回':'danger','已下架':'info','已交换':'warning','已售罄':'danger'};return m[s]||'info'}
 async function reject(id){ ElMessageBox.confirm('确定驳回该书？驳回后将下架。','驳回确认',{type:'warning'}).then(async()=>{await bookStore.updateBook(id,{status:'已驳回'});ElMessage.success('已驳回')}).catch(()=>{}) }
+
+async function batchStatus(status) {
+  if (!selection.value.length) return
+  try { await ElMessageBox.confirm(`确定把选中的 ${selection.value.length} 本书改为「${status}」？`, '批量操作', { type: 'warning' }) } catch { return }
+  const n = selection.value.length
+  for (const r of selection.value) await bookStore.updateBook(r.id, { status })
+  ElMessage.success(`已更新 ${n} 本`)
+  selection.value = []
+}
+
+async function batchDelete() {
+  if (!selection.value.length) return
+  try { await ElMessageBox.confirm(`确定删除选中的 ${selection.value.length} 本书？此操作不可恢复。`, '批量删除', { type: 'warning' }) } catch { return }
+  const n = selection.value.length
+  for (const r of selection.value) await bookStore.deleteBook(r.id)
+  ElMessage.success(`已删除 ${n} 本`)
+  selection.value = []
+}
 async function onCrop(file) {
   const formData = new FormData(); formData.append('file', file, file.name || 'cropped.jpg')
   try {
@@ -72,6 +97,7 @@ async function onCrop(file) {
 
 <style scoped>
 .ph { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.batch { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 8px 12px; background: #fdf8f2; border: 1px solid #f0e4d4; border-radius: 8px; font-size: 13px; color: #6b5c4c; }
 .ph h2 { margin: 0; font-size: 22px; color: #1e293b; font-weight: 700; }
 :deep(.el-card) { border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
 :deep(.el-table) { --el-table-border-color: #f1f5f9; }

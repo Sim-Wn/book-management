@@ -71,6 +71,12 @@ check('健康检查返回 ok', health.status === 200 && health.data?.ok === true
 const stats = await call('GET', '/api/stats')
 check('统计接口返回在售数量', stats.status === 200 && Number.isInteger(stats.data?.booksOnSale))
 
+// 分页：带 page 参数时返回 { items, total }
+const paged = await call('GET', '/api/books?status=%E5%9C%A8%E5%94%AE&page=1&pageSize=5')
+check('图书接口分页返回 items/total', Array.isArray(paged.data?.items) && paged.data.items.length <= 5 && Number(paged.data?.total) >= paged.data.items.length)
+const forumPage = await call('GET', '/api/forum/posts?page=1&pageSize=5')
+check('论坛接口分页返回 items/total', Array.isArray(forumPage.data?.items) && Number(forumPage.data?.total) >= 0)
+
 // ---------- 1. 未登录访问应被拒绝 ----------
 check('未登录读取用户列表 = 401', (await call('GET', '/api/auth/users')).status === 401)
 check('未登录下单 = 401', (await call('POST', '/api/orders', { body: { items: [] } })).status === 401)

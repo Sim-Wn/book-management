@@ -5,12 +5,16 @@
       <div class="top-bar">
         <h2>💬 论坛</h2>
         <div class="acts">
+          <el-radio-group v-model="mine" size="small" @change="onMine">
+            <el-radio-button :value="false">全部</el-radio-button>
+            <el-radio-button :value="true">我的帖子</el-radio-button>
+          </el-radio-group>
           <el-input
             v-model="keyword"
             placeholder="搜索帖子..."
             size="small"
             clearable
-            style="width:200px"
+            style="width:180px"
             @keyup.enter="loadPosts"
             @clear="loadPosts"
           >
@@ -35,27 +39,67 @@
         </div>
       </el-card>
       <div v-if="loading" style="text-align:center;padding:40px"><el-icon class="spinner" size="28"><Loading /></el-icon></div>
-      <el-empty v-else-if="!posts.length" :image-size="80" :description="keyword ? '没有找到相关帖子' : '暂无帖子，来发第一帖吧'"/>
+      <el-empty v-else-if="!posts.length" :image-size="80" :description="emptyText"/>
+      <div class="pager" v-if="total > pageSize">
+        <el-pagination
+          background
+          layout="prev, pager, next, total"
+          :total="total"
+          :page-size="pageSize"
+          v-model:current-page="page"
+          @current-change="loadPosts(false)"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { api } from '@/api'
+import { useAuthStore } from '@/stores/auth'
 import NavHeader from '@/components/NavHeader.vue'
 import { formatDateTime } from '@/utils/format'
 
+const auth = useAuthStore()
 const posts = ref([])
+const total = ref(0)
+const page = ref(1)
+const pageSize = 10
 const loading = ref(true)
 const keyword = ref('')
+const mine = ref(false)
 
-async function loadPosts() {
+const emptyText = computed(() => {
+  if (keyword.value) return '没有找到相关帖子'
+  if (mine.value) return '你还没有发过帖子'
+  return '暂无帖子，来发第一帖吧'
+})
+
+function onMine() {
+  if (mine.value && !auth.isLoggedIn) {
+    ElMessage.warning('登录后才能查看自己的帖子')
+    mine.value = false
+    return
+  }
+  loadPosts()
+}
+
+async function loadPosts(reset = true) {
   loading.value = true
+  if (reset) page.value = 1
+  const params = { page: page.value, pageSize }
+  if (keyword.value.trim()) params.keyword = keyword.value.trim()
+  if (mine.value && auth.user) params.user_id = auth.user.id
   try {
-    const data = await api.getPosts({ keyword: keyword.value.trim() })
-    if (Array.isArray(data)) posts.value = data
-  } catch {}
+    const data = await api.getPosts(params)
+    posts.value = Array.isArray(data) ? data : (data.items || [])
+    total.value = Array.isArray(data) ? data.length : (data.total || 0)
+  } catch {
+    posts.value = []
+    total.value = 0
+  }
   loading.value = false
 }
 
@@ -80,5 +124,12 @@ onMounted(loadPosts)
 .post-meta { display: flex; gap: 20px; font-size: 12px; color: var(--text-muted); }
 .post-meta span { display: flex; align-items: center; gap: 3px; }
 .spinner { animation: spin 1s linear infinite; color: var(--primary); }
+.pager { display: flex; justify-content: center; padding: 16px 0; }
+@media (max-width: 768px) {
+  .top-bar { flex-wrap: wrap; }
+  .acts { flex-wrap: wrap; }
+  .acts :deep(.el-input) { width: 140px !important; }
+  .wrap { padding: 14px; }
+}
 @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
 </style>
