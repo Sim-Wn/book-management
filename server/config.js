@@ -31,18 +31,21 @@ loadEnv()
 
 const DEV_JWT_SECRET = 'shuyi-dev-secret-change-me'
 
-// 云平台（Railway / Render / Aiven 等）通常只给一个连接串，这里统一解析成 mysql2 需要的字段
+// 云平台（Railway / Render / Aiven / TiDB 等）通常只给一个连接串，这里统一解析成 mysql2 需要的字段
 function parseDbUrl(raw) {
   if (!raw) return {}
   try {
     const u = new URL(raw)
     if (!/^mysql:?/.test(u.protocol)) return {}
+    const sslParam = u.searchParams.get('ssl') || u.searchParams.get('ssl-mode') || u.searchParams.get('sslmode')
+    const sslEnabled = sslParam ? !/^(DISABLED|false|0)$/i.test(sslParam) : false
     return {
       host: u.hostname,
       port: Number(u.port) || 3306,
       user: u.username ? decodeURIComponent(u.username) : undefined,
       password: u.password ? decodeURIComponent(u.password) : undefined,
       database: u.pathname.replace(/^\//, '') || undefined,
+      ssl: sslEnabled,
     }
   } catch {
     return {}
@@ -52,6 +55,7 @@ function parseDbUrl(raw) {
 const dbUrl = parseDbUrl(process.env.MYSQL_URL || process.env.DATABASE_URL)
 const dbPassword =
   process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : (dbUrl.password ?? 'root')
+const dbSsl = process.env.DB_SSL === '1' || dbUrl.ssl ? { minVersion: 'TLSv1.2' } : undefined
 
 export const config = {
   port: Number(process.env.PORT) || 3000,
@@ -65,7 +69,8 @@ export const config = {
     charset: 'utf8mb4',
     waitForConnections: true,
     connectionLimit: 10,
-    connectTimeout: 5000,
+    connectTimeout: 10000,
+    ...(dbSsl ? { ssl: dbSsl } : {}),
   },
   // 用户上架的书是否需要管理员审核后才出现在「在售」；设 BOOK_REVIEW=0 可关闭
   bookReview: (process.env.BOOK_REVIEW ?? '1') !== '0',
