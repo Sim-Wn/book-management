@@ -291,21 +291,9 @@ npm run fix:data -- --apply     # 执行修复
 - 上传目录需要持久化，或把 `routes/upload.js` 换成对象存储；
 - 支付是模拟流程，接入真实支付前不要上线交易功能。
 
-## 上传到 GitHub
+## 反馈
 
-```bash
-# 如果项目还不是 git 仓库（目录下没有 .git）
-git init
-git add .
-git commit -m "feat: 书易校园二手书交易平台（Vue3 + Express + MySQL）"
-git branch -M main
-
-# 如果已经初始化过，直接从这一步开始
-git remote add origin https://github.com/<你的用户名>/book-management.git
-git push -u origin main
-```
-
-仓库已配置 `.gitignore`：`node_modules`、`dist`、`server/uploads` 里的用户图片、`.env` 都不会被提交。建议先建 Private 仓库，确认无误后再公开。
+有问题或建议，欢迎在 GitHub Issues 里提出。
 
 ## License
 
