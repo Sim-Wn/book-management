@@ -24,8 +24,18 @@
           <el-option label="🆕 最新上架" value="new"/>
         </el-select>
       </div>
-      <div v-if="loading" style="text-align:center;padding:60px">
-        <el-icon class="spinner" size="32"><Loading /></el-icon>
+      <div v-if="loading" class="sk-grid">
+        <div v-for="i in 12" :key="i" class="sk-card">
+          <el-skeleton animated>
+            <template #template>
+              <el-skeleton-item variant="image" style="width:100%;height:180px;border-radius:12px 12px 0 0" />
+              <div style="padding:14px 12px">
+                <el-skeleton-item variant="h4" style="width:75%" />
+                <el-skeleton-item variant="text" style="width:45%;margin-top:10px" />
+              </div>
+            </template>
+          </el-skeleton>
+        </div>
       </div>
       <div v-else-if="list.length">
         <el-row :gutter="16">
@@ -132,5 +142,15 @@ onMounted(async () => {
 
 .spinner { animation: spin 1s linear infinite; color: #8b6040; }
 .pager { display: flex; justify-content: center; padding: 8px 0 24px; }
+.sk-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.sk-card { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #f0ebe0; }
+@media (max-width: 1200px) { .sk-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 768px) {
+  .sk-grid { grid-template-columns: repeat(2, 1fr); }
+  .banner { padding: 24px 14px; }
+  .banner h1 { font-size: 22px; }
+  .filters { padding: 14px; gap: 10px; }
+  .wrap { padding: 14px; }
+}
 @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
 </style>

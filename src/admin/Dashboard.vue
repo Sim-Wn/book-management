@@ -6,6 +6,17 @@
         <div class="stat clickable" @click="goTo(s)"><div class="sv">{{ s.v }}</div><div class="sl">{{ s.l }}</div><div class="si">{{ s.i }}</div></div>
       </el-col>
     </el-row>
+    <el-card header="订单状态分布" shadow="never" class="trend-card">
+      <div class="status-bars" v-if="statusStats.length">
+        <div class="sbar" v-for="s in statusStats" :key="s.status">
+          <span class="sb-name">{{ s.status }}</span>
+          <div class="sb-track"><div class="sb-fill" :style="{ width: (s.count / statusMax * 100) + '%' }"></div></div>
+          <span class="sb-count">{{ s.count }}</span>
+        </div>
+      </div>
+      <div v-else class="tempty">还没有订单</div>
+    </el-card>
+
     <el-row :gutter="18" style="margin-top:18px">
       <el-col :span="14">
         <el-card header="图书分类统计" shadow="never">
@@ -86,6 +97,16 @@ const catS = computed(() => {
 
 const recent = computed(() => orderList.value.slice(0, 5))
 
+// 订单状态分布：演示数据里订单时间跨度大，用状态分布比按天趋势更有信息量
+const statusStats = computed(() => {
+  const counts = {}
+  for (const o of orderList.value) counts[o.status] = (counts[o.status] || 0) + 1
+  return Object.entries(counts)
+    .map(([status, count]) => ({ status, count }))
+    .sort((a, b) => b.count - a.count)
+})
+const statusMax = computed(() => Math.max(1, ...statusStats.value.map((s) => s.count)))
+
 const pageMap = { '图书总数': '/admin/books', '注册用户': '/admin/users', '订单总数': '/admin/orders', '总销售额': '/admin/orders' }
 function goTo(s) {
   if (s.l === '总销售额') {
@@ -125,9 +146,19 @@ const salesDlg = reactive({ vis: false, list: [] })
 .si { position: absolute; right: 18px; top: 18px; font-size: 26px; opacity: 0.7; z-index: 1; }
 
 /* Bar chart */
-.bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.bn { width: 80px; font-size: 13px; color: #475569; font-weight: 500; }
+.bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }.bn { width: 80px; font-size: 13px; color: #475569; font-weight: 500; }
 .bp { flex: 1; height: 20px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
 .bf { height: 100%; background: linear-gradient(90deg, #8b6040, #c09868); border-radius: 10px; transition: width 0.4s; }
 .bc { font-size: 13px; color: #64748b; min-width: 24px; text-align: right; font-weight: 600; }
+
+/* 订单状态分布 */
+.trend-card { margin-top: 18px; border-radius: 12px; }
+.status-bars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 28px; }
+.sbar { display: flex; align-items: center; gap: 10px; }
+.sb-name { width: 68px; font-size: 13px; color: #475569; flex-shrink: 0; }
+.sb-track { flex: 1; height: 18px; background: #f8fafc; border-radius: 9px; overflow: hidden; }
+.sb-fill { height: 100%; background: linear-gradient(90deg, #8b6040, #c09868); border-radius: 9px; }
+.sb-count { width: 24px; text-align: right; font-size: 13px; font-weight: 600; color: #64748b; }
+.tempty { font-size: 13px; color: #94a3b8; padding: 10px 2px; }
+@media (max-width: 900px) { .status-bars { grid-template-columns: 1fr; } }
 </style>

@@ -31,7 +31,7 @@
             <el-table-column label="图书" min-width="300">
               <template #default="{ row: r }">
                 <div style="display:flex;align-items:center;gap:12px">
-                  <span style="font-size:30px">{{ r.cover }}</span>
+                  <span class="thumb"><BookCover :book="r" variant="thumb" /></span>
                   <div>
                     <div style="font-weight:600">{{ r.name }}</div>
                     <div style="font-size:12px;color:var(--text-muted)">{{ r.author }} | {{ r.condition_grade }}</div>
@@ -70,6 +70,7 @@ import { useOrderStore } from '@/stores/order'
 import { useAuthStore } from '@/stores/auth'
 import { useBookStore } from '@/stores/book'
 import NavHeader from '@/components/NavHeader.vue'
+import BookCover from '@/components/BookCover.vue'
 
 const cart = useCartStore()
 const orderStore = useOrderStore()
@@ -134,6 +135,7 @@ async function submit(group) {
 .addr-card { border-radius: 12px; margin-bottom: 16px; }
 .addr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .tip { font-size: 12px; color: #94a3b8; }
+.thumb { width: 46px; height: 60px; border-radius: 6px; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 6px rgba(60,35,20,0.15); }
 .group { border-radius: 12px; margin-bottom: 16px; }
 .gh { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
 .cnt { font-size: 12px; color: #94a3b8; }

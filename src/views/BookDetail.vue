@@ -1,12 +1,14 @@
 <template>
   <div class="page">
     <NavHeader />
+    <div class="wrap" v-if="loading">
+      <el-skeleton :rows="8" animated />
+    </div>
     <div class="wrap" v-if="book">
       <el-breadcrumb separator=">" class="bread"><el-breadcrumb-item :to="{path:'/home'}">首页</el-breadcrumb-item><el-breadcrumb-item :to="{path:'/books'}">全部图书</el-breadcrumb-item><el-breadcrumb-item>{{ book.name }}</el-breadcrumb-item></el-breadcrumb>
       <div class="detail">
         <div class="cover">
-          <img v-if="book.cover_url" :src="book.cover_url" class="cover-img" @error="e=>{e.target.style.display='none';imgErr=true}" />
-          <span v-show="!book.cover_url || imgErr" class="emoji">{{ book.cover }}</span>
+          <BookCover :book="book" variant="large" />
           <el-tag type="warning" effect="dark" size="small" class="ctag">{{ book.condition_grade }}</el-tag>
         </div>
         <div class="info">
@@ -78,8 +80,9 @@ import { useOrderStore } from '@/stores/order'
 import { api } from '@/api'
 import NavHeader from '@/components/NavHeader.vue'
 import BookCard from '@/components/BookCard.vue'
+import BookCover from '@/components/BookCover.vue'
 const route = useRoute(); const router = useRouter(); const bookStore = useBookStore(); const cart = useCartStore(); const auth = useAuthStore(); const swapStore = useSwapStore(); const orderStore = useOrderStore()
-const book = ref(null); const isFav = ref(false); const loading = ref(true); const imgErr = ref(false)
+const book = ref(null); const isFav = ref(false); const loading = ref(true)
 const ratingInfo = ref({ rating: 0, count: 0, mine: null })
 const myScore = ref(0); const hoverScore = ref(0)
 const showSwapDlg = ref(false); const swapBookId = ref(null); const myBooks = ref([])
@@ -167,13 +170,11 @@ async function doSwap() {
 .bread { margin-bottom: 16px; }
 .detail { display: flex; gap: 28px; background: #fff; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
 .cover {
-  width: 320px; height: 360px; background: linear-gradient(145deg, #f5f3fa, #ede9fe);
-  display: flex; align-items: center; justify-content: center; border-radius: 10px;
+  width: 320px; height: 360px; border-radius: 10px;
   flex-shrink: 0; position: relative; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(60, 35, 20, 0.18);
 }
-.cover-img { width: 100%; height: 100%; object-fit: cover; }
-.emoji { font-size: 96px; }
-.ctag { position: absolute; top: 12px; left: 12px; }
+.ctag { position: absolute; top: 12px; left: 12px; z-index: 2; }
 .info { flex: 1; }
 .ih { display: flex; align-items: center; gap: 10px; }
 .ih h2 { margin: 0; font-size: 22px; color: var(--text); }
@@ -205,5 +206,15 @@ async function doSwap() {
 .buy-info { font-size: 15px; color: var(--text); margin-bottom: 16px; }
 .sec-head { margin-bottom: 14px; }
 .sec-head h2 { margin: 0; font-size: 20px; color: var(--text); font-weight: 700; }
+
+@media (max-width: 860px) {
+  .wrap { padding: 12px; }
+  .detail { flex-direction: column; padding: 16px; gap: 18px; }
+  .cover { width: 100%; height: 300px; }
+  .ih h2 { font-size: 19px; }
+  .p { font-size: 26px; }
+  .acts { flex-wrap: wrap; }
+  .seller { flex-wrap: wrap; gap: 10px; }
+}
 @media (max-width:768px){.detail{flex-direction:column}.cover{width:100%;height:240px}}
 </style>

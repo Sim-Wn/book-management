@@ -133,5 +133,11 @@ function logout(){auth.logout();router.push('/admin/login')}
 /* Content */
 .content{flex:1;padding:18px;overflow:auto;background:#faf8f4}
 
-@media(max-width:768px){.sidebar{width:56px!important}.content{padding:10px}}
+@media(max-width:768px){
+  .sidebar{width:56px!important}
+  .content{padding:10px}
+  .tt,.topbar-clock{display:none}
+  .topbar{padding:0 10px;gap:6px}
+  .back-btn{padding:4px 6px}
+}
 </style>

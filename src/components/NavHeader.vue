@@ -13,6 +13,18 @@
           <el-menu-item index="/forum" @click="router.push('/forum')">论坛</el-menu-item>
           <el-menu-item index="/archive" @click="router.push('/archive')">图书档案</el-menu-item>
         </el-menu>
+        <el-dropdown class="mobile-menu" trigger="click" @command="(p) => router.push(p)">
+          <span class="mm-btn"><el-icon size="18"><Menu /></el-icon></span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="/home">首页</el-dropdown-item>
+              <el-dropdown-item command="/books">全部图书</el-dropdown-item>
+              <el-dropdown-item command="/sell">上架图书</el-dropdown-item>
+              <el-dropdown-item command="/forum">论坛</el-dropdown-item>
+              <el-dropdown-item command="/archive">图书档案</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="nav-right">
         <el-input v-model="kw" placeholder="搜索图书..." size="small" class="search" @keyup.enter="doSearch" clearable>
@@ -108,4 +120,21 @@ onMounted(() => updateBadges())
 .ico:hover { color: var(--primary); }
 .cart-ico { margin-right: -2px; }
 .user-tag { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 13px; color: var(--text); font-weight: 500; }
+.mobile-menu { display: none; margin-left: 4px; }
+.mm-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); }
+.mm-btn:hover { background: rgba(139,96,64,0.08); color: var(--primary); }
+
+@media (max-width: 960px) {
+  .nav-menu { display: none !important; }
+  .mobile-menu { display: inline-flex; }
+  .search { width: 150px; }
+}
+@media (max-width: 700px) {
+  .search { display: none; }
+  .back-btn { display: none; }
+  .nav-inner { padding: 0 10px; }
+  .nav-right { gap: 10px; }
+  .logo { margin-right: 2px; }
+  .logo span { display: none; }
+}
 </style>

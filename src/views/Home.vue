@@ -105,4 +105,15 @@ onMounted(async()=>{loading.value=true;await bookStore.fetchBooks();await bookSt
 .ft{background:#3a2518;text-align:center;padding:24px;margin-top:0}
 .ft p{color:rgba(255,255,255,0.3);font-size:12px;margin:3px 0}
 .fp{font-family:KaiTi,serif;font-style:italic;color:rgba(255,255,255,0.15)}
+@media (max-width: 768px) {
+  .hero { padding: 40px 16px 34px; }
+  .hero h1 { font-size: 26px; letter-spacing: 1px; }
+  .hero p { font-size: 14px; margin-bottom: 24px; }
+  .hero-stats { gap: 26px; }
+  .hero-stats .hs strong { font-size: 24px; }
+  .hero-kv { letter-spacing: 3px; font-size: 12px; }
+  .sec { padding: 20px 14px; }
+  .cat { padding: 9px 16px; font-size: 13px; }
+  .sec-head h2 { font-size: 18px; }
+}
 </style>
