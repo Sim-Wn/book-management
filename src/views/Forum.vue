@@ -4,7 +4,20 @@
     <div class="wrap">
       <div class="top-bar">
         <h2>💬 论坛</h2>
-        <el-button type="primary" @click="$router.push('/forum/new')"><el-icon><Plus /></el-icon>发帖</el-button>
+        <div class="acts">
+          <el-input
+            v-model="keyword"
+            placeholder="搜索帖子..."
+            size="small"
+            clearable
+            style="width:200px"
+            @keyup.enter="loadPosts"
+            @clear="loadPosts"
+          >
+            <template #prefix><el-icon><Search /></el-icon></template>
+          </el-input>
+          <el-button type="primary" @click="$router.push('/forum/new')"><el-icon><Plus /></el-icon>发帖</el-button>
+        </div>
       </div>
       <el-card shadow="never" class="card" v-if="posts.length && !loading">
         <div v-for="p in posts" :key="p.id" class="post-item" @click="$router.push('/forum/'+p.id)">
@@ -15,14 +28,14 @@
           </div>
           <div class="post-meta">
             <span>{{ p.user_name }}</span>
-            <span>{{ formatTime(p.created_at) }}</span>
+            <span>{{ formatDateTime(p.created_at) }}</span>
             <span>👁 {{ p.view_count || 0 }}</span>
             <span>💬 {{ p.reply_count || 0 }}</span>
           </div>
         </div>
       </el-card>
       <div v-if="loading" style="text-align:center;padding:40px"><el-icon class="spinner" size="28"><Loading /></el-icon></div>
-      <el-empty v-else-if="!posts.length" :image-size="80" description="暂无帖子，来发第一帖吧"/>
+      <el-empty v-else-if="!posts.length" :image-size="80" :description="keyword ? '没有找到相关帖子' : '暂无帖子，来发第一帖吧'"/>
     </div>
   </div>
 </template>
@@ -31,23 +44,30 @@
 import { ref, onMounted } from 'vue'
 import { api } from '@/api'
 import NavHeader from '@/components/NavHeader.vue'
-const posts = ref([]); const loading = ref(true)
-onMounted(async () => {
-  try { const data = await api.getPosts(); if (Array.isArray(data)) posts.value = data } catch {}
+import { formatDateTime } from '@/utils/format'
+
+const posts = ref([])
+const loading = ref(true)
+const keyword = ref('')
+
+async function loadPosts() {
+  loading.value = true
+  try {
+    const data = await api.getPosts({ keyword: keyword.value.trim() })
+    if (Array.isArray(data)) posts.value = data
+  } catch {}
   loading.value = false
-})
-function formatTime(t) {
-  if (!t) return ''
-  const d = new Date(t)
-  return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 }
+
+onMounted(loadPosts)
 </script>
 
 <style scoped>
 .page { min-height: 100vh; background: var(--bg); }
 .wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
-.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; }
 .top-bar h2 { margin: 0; font-size: 22px; color: var(--text); font-weight: 700; }
+.acts { display: flex; align-items: center; gap: 10px; }
 .card { border-radius: 12px; border: 1px solid #f0ebe0; }
 .post-item { padding: 18px 20px; border-bottom: 1px solid #f5f0e8; cursor: pointer; transition: all 0.2s; }
 .post-item:last-child { border-bottom: none; }

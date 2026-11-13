@@ -10,11 +10,18 @@ async function usernameOf(userId) {
 }
 
 router.get('/posts', async (req, res) => {
-  const { user_id } = req.query
+  const { user_id, keyword } = req.query
   try {
-    let sql = 'SELECT * FROM forum_posts'
+    const where = []
     const params = []
-    if (user_id) { sql += ' WHERE user_id=?'; params.push(user_id) }
+    if (user_id) { where.push('user_id=?'); params.push(user_id) }
+    if (keyword) {
+      where.push('(title LIKE ? OR content LIKE ?)')
+      const k = `%${keyword}%`
+      params.push(k, k)
+    }
+    let sql = 'SELECT * FROM forum_posts'
+    if (where.length) sql += ' WHERE ' + where.join(' AND ')
     sql += ' ORDER BY is_pinned DESC, updated_at DESC'
     const [rows] = await pool.query(sql, params)
     res.json(Array.isArray(rows) ? rows : [])
