@@ -33,6 +33,6 @@
     "vite-plugin-vue-devtools": "^8.1.1"
   },
   "engines": {
-    "node": ">=18.17"
+    "node": ">=20.19.0"
   }
 }
