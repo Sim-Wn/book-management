@@ -6,9 +6,9 @@ export const useOrderStore = defineStore('order', () => {
   const orders = ref([])
   const statusFlow = ['待付款', '待发货', '已发货', '已签收', '已完成']
 
-  async function fetchOrders(userId) {
+  async function fetchOrders(userId, role) {
     try {
-      const data = await api.getOrders(userId)
+      const data = await api.getOrders(userId, role)
       if (Array.isArray(data)) orders.value = data
     } catch {}
   }

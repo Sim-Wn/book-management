@@ -60,10 +60,18 @@ export const api = {
   getFavorites: (userId) => request('/books/' + userId + '/favorites'),
   toggleFavorite: (userId, bookId, add) => request('/books/' + userId + '/favorite', { method: 'POST', body: JSON.stringify({ bookId, add }) }),
   getRating: (bookId, userId) => request('/books/' + bookId + '/rating' + (userId ? '?user_id=' + userId : '')),
+  getReviews: (bookId) => request('/books/' + bookId + '/reviews'),
   rateBook: (bookId, data) => request('/books/' + bookId + '/rate', { method: 'POST', body: JSON.stringify(data) }),
 
   createOrder: (data) => request('/orders', { method: 'POST', body: JSON.stringify(data) }),
-  getOrders: (userId) => request('/orders' + (userId ? '?user_id=' + userId : '')),
+  getOrders: (userId, role) => {
+    const qs = new URLSearchParams()
+    if (userId) qs.set('user_id', userId)
+    if (role) qs.set('role', role)
+    const s = qs.toString()
+    return request('/orders' + (s ? '?' + s : ''))
+  },
+  getOrder: (id) => request('/orders/' + id),
   updateOrderStatus: (id, status) => request('/orders/' + id + '/status', { method: 'PUT', body: JSON.stringify({ status }) }),
   payOrder: (id) => request('/orders/' + id + '/pay', { method: 'POST' }),
   cancelOrder: (id) => request('/orders/' + id + '/cancel', { method: 'POST' }),

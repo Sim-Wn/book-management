@@ -3,49 +3,76 @@
     <NavHeader />
     <div class="wrap">
       <h2>我的订单</h2>
-      <div style="margin-bottom:12px" v-if="auth.isLoggedIn && orderStore.orders.length">
-        <el-radio-group v-model="orderTab" size="small">
-          <el-radio-button value="">全部</el-radio-button>
-          <el-radio-button value="待付款">待付款</el-radio-button>
-          <el-radio-button value="待发货">待发货</el-radio-button>
-          <el-radio-button value="已发货">待收货</el-radio-button>
-          <el-radio-button value="已签收">已签收</el-radio-button>
-          <el-radio-button value="已完成">已完成</el-radio-button>
-        </el-radio-group>
-      </div>
-      <template v-if="!auth.isLoggedIn"><el-empty description="请先登录"><el-button type="primary" @click="$router.push('/login')">去登录</el-button></el-empty></template>
-      <template v-else-if="!orders.length"><el-empty description="暂无订单"><el-button type="primary" @click="$router.push('/books')">去逛逛</el-button></el-empty></template>
+
+      <template v-if="!auth.isLoggedIn">
+        <el-empty description="请先登录"><el-button type="primary" @click="$router.push('/login')">去登录</el-button></el-empty>
+      </template>
+
       <template v-else>
-        <el-card v-for="o in orders" :key="o.id" shadow="never" class="oc">
-          <template #header>
-            <div class="oh">
-              <span>订单号：{{ o.order_no }}</span>
-              <span>{{ formatDateTime(o.created_at || o.createdAt) }}</span>
-              <el-tag :type="tagType(o.status)" size="small">{{ o.status }}</el-tag>
+        <div class="tabs">
+          <el-radio-group v-model="roleTab" size="small" @change="load">
+            <el-radio-button value="buyer">我买到的</el-radio-button>
+            <el-radio-button value="seller">我卖出的</el-radio-button>
+          </el-radio-group>
+          <el-radio-group v-model="orderTab" size="small">
+            <el-radio-button value="">全部</el-radio-button>
+            <el-radio-button value="待付款">待付款</el-radio-button>
+            <el-radio-button value="待发货">待发货</el-radio-button>
+            <el-radio-button value="已发货">待收货</el-radio-button>
+            <el-radio-button value="已签收">已签收</el-radio-button>
+            <el-radio-button value="已完成">已完成</el-radio-button>
+          </el-radio-group>
+        </div>
+
+        <el-empty v-if="!orders.length" :description="roleTab === 'seller' ? '还没有人买你的书' : '暂无订单'">
+          <el-button type="primary" @click="$router.push('/books')">去逛逛</el-button>
+        </el-empty>
+
+        <template v-else>
+          <el-card v-for="o in orders" :key="o.id" shadow="never" class="oc">
+            <template #header>
+              <div class="oh">
+                <span>
+                  订单号：<router-link :to="'/orders/' + o.id" class="no">{{ o.order_no }}</router-link>
+                </span>
+                <span>{{ formatDateTime(o.created_at || o.createdAt) }}</span>
+                <span v-if="roleTab === 'seller'">买家：{{ o.buyer_name || o.user_name }}</span>
+                <el-tag :type="tagType(o.status)" size="small">{{ o.status }}</el-tag>
+              </div>
+            </template>
+            <el-table :data="o.items" size="small">
+              <el-table-column label="图书" min-width="200"><template #default="{ row: r }">{{ r.book_name || r.name }}</template></el-table-column>
+              <el-table-column label="单价" width="90"><template #default="{ row: r }">¥{{ r.price }}</template></el-table-column>
+              <el-table-column label="数量" width="70"><template #default="{ row: r }">{{ r.quantity }}</template></el-table-column>
+            </el-table>
+            <div class="oi"><span>收货：{{ o.address }}</span><span>电话：{{ o.phone }}</span></div>
+            <div class="ot">合计：<strong>¥{{ o.total }}</strong></div>
+
+            <div class="actions" v-if="o.status !== '已取消' && o.status !== '已退货' && o.status !== '已完成'">
+              <template v-if="roleTab === 'buyer'">
+                <el-button v-if="o.status === '待付款'" type="success" size="small" @click="doPay(o)">去支付</el-button>
+                <el-button v-if="o.status === '待付款' || o.status === '待发货'" type="danger" size="small" @click="doCancel(o)">取消订单</el-button>
+                <el-button v-if="o.status === '已发货'" type="primary" size="small" @click="doReceive(o)">确认收货</el-button>
+                <el-button v-if="o.status === '已签收'" type="success" size="small" @click="doComplete(o)">确认完成</el-button>
+                <el-button v-if="o.status === '已签收'" type="warning" size="small" @click="doRefund(o)">申请退货</el-button>
+                <span v-if="o.status === '申请退货'" class="hint">等待商家审核...</span>
+                <span v-if="o.status === '退货中'" class="hint">退货处理中...</span>
+              </template>
+              <template v-else>
+                <el-button v-if="o.status === '待发货'" type="primary" size="small" @click="doShip(o)">发货</el-button>
+                <el-button v-if="o.status === '待发货'" type="danger" size="small" @click="doCancel(o)">取消订单</el-button>
+                <span v-if="o.status === '待付款'" class="hint">等待买家付款</span>
+                <span v-if="o.status === '申请退货'" class="hint">买家申请退货，请到后台处理</span>
+              </template>
             </div>
-          </template>
-          <el-table :data="o.items" size="small">
-            <el-table-column label="图书" min-width="200"><template #default="{ row: r }">{{ r.book_name || r.name }}</template></el-table-column>
-            <el-table-column label="单价" width="90"><template #default="{ row: r }">¥{{ r.price }}</template></el-table-column>
-            <el-table-column label="数量" width="70"><template #default="{ row: r }">{{ r.quantity }}</template></el-table-column>
-          </el-table>
-          <div class="oi"><span>收货：{{ o.address }}</span><span>电话：{{ o.phone }}</span></div>
-          <div class="ot">合计：<strong>¥{{ o.total }}</strong></div>
-          <div class="actions" v-if="o.status !== '已取消' && o.status !== '已退货' && o.status !== '已完成'">
-            <el-button v-if="o.status === '待付款'" type="success" size="small" @click="doPay(o)">去支付</el-button>
-            <el-button v-if="o.status === '待付款' || o.status === '待发货'" type="danger" size="small" @click="doCancel(o)">取消订单</el-button>
-            <el-button v-if="o.status === '已发货'" type="primary" size="small" @click="doReceive(o)">确认收货</el-button>
-            <el-button v-if="o.status === '已签收'" type="success" size="small" @click="doComplete(o)">确认完成</el-button>
-            <el-button v-if="o.status === '已签收'" type="warning" size="small" @click="doRefund(o)">申请退货</el-button>
-            <span v-if="o.status === '申请退货'" class="hint">等待商家审核...</span>
-            <span v-if="o.status === '退货中'" class="hint">退货处理中...</span>
-          </div>
-          <div class="steps">
-            <el-steps :active="step(o.status)" finish-status="success" align-center>
-              <el-step v-for="s in activeSteps(o.status)" :key="s" :title="s"/>
-            </el-steps>
-          </div>
-        </el-card>
+
+            <div class="steps">
+              <el-steps :active="step(o.status)" finish-status="success" align-center>
+                <el-step v-for="s in activeSteps(o.status)" :key="s" :title="s"/>
+              </el-steps>
+            </div>
+          </el-card>
+        </template>
       </template>
     </div>
   </div>
@@ -58,22 +85,35 @@ import { useAuthStore } from '@/stores/auth'
 import { useOrderStore } from '@/stores/order'
 import NavHeader from '@/components/NavHeader.vue'
 import { formatDateTime } from '@/utils/format'
-const auth = useAuthStore(); const orderStore = useOrderStore()
+
+const auth = useAuthStore()
+const orderStore = useOrderStore()
+const roleTab = ref('buyer')
 const orderTab = ref('')
+
 const orders = computed(() => {
   let list = [...orderStore.orders]
-  if (orderTab.value) list = list.filter(o => o.status === orderTab.value)
-  return list.sort((a,b)=>b.id-a.id)
+  if (orderTab.value) list = list.filter((o) => o.status === orderTab.value)
+  return list.sort((a, b) => b.id - a.id)
 })
-onMounted(async () => { if(auth.user) await orderStore.fetchOrders(auth.user.id) })
 
-function step(s) { return orderStore.statusFlow.indexOf(s) + 1 }
+async function load() {
+  if (auth.user) await orderStore.fetchOrders(auth.user.id, roleTab.value)
+}
+
+onMounted(load)
+
+function step(s) {
+  if (s === '已完成') return 5
+  if (['申请退货', '退货中', '已退货'].includes(s)) return 4
+  return Math.max(0, orderStore.statusFlow.indexOf(s))
+}
 function activeSteps(status) {
   if (status === '已取消') return ['已取消']
   if (status === '待付款') return orderStore.statusFlow
-  if (status === '申请退货') return ['待付款','待发货', '已发货', '已签收', '申请退货']
-  if (status === '退货中') return ['待付款','待发货', '已发货', '已签收', '退货中']
-  if (status === '已退货') return ['待付款','待发货', '已发货', '已签收', '已退货']
+  if (status === '申请退货') return ['待付款', '待发货', '已发货', '已签收', '申请退货']
+  if (status === '退货中') return ['待付款', '待发货', '已发货', '已签收', '退货中']
+  if (status === '已退货') return ['待付款', '待发货', '已发货', '已签收', '已退货']
   return orderStore.statusFlow
 }
 function tagType(s) {
@@ -85,25 +125,36 @@ async function doPay(o) {
   try { await ElMessageBox.confirm(`确认支付 ¥${o.total}？(模拟支付)`, '支付确认', { type: 'success' }) } catch { return }
   const r = await orderStore.payOrder(o.id, auth.user.id)
   r.ok ? ElMessage.success('支付成功，等待发货') : ElMessage.error(r.msg || '支付失败')
+  load()
 }
 async function doCancel(o) {
   try { await ElMessageBox.confirm('确定取消该订单？', '提示', { type: 'warning' }) } catch { return }
   const r = await orderStore.cancelOrder(o.id, auth.user.id)
   r.ok ? ElMessage.success('已取消') : ElMessage.error(r.msg || '取消失败')
+  load()
 }
 async function doReceive(o) {
   const r = await orderStore.receiveOrder(o.id, auth.user.id)
   r.ok ? ElMessage.success('已确认收货') : ElMessage.error(r.msg || '操作失败')
+  load()
 }
 async function doComplete(o) {
   try { await ElMessageBox.confirm('确认订单已完成？', '提示', { type: 'success' }) } catch { return }
-  await orderStore.updateStatus(o.id, '已完成', auth.user.id)
-  ElMessage.success('订单已完成')
+  const r = await orderStore.updateStatus(o.id, '已完成', auth.user.id)
+  if (r && r.ok === false) ElMessage.error(r.msg || '操作失败')
+  else ElMessage.success('订单已完成')
+  load()
 }
 async function doRefund(o) {
   try { await ElMessageBox.confirm('确定申请退货退款？退货需商家审核。', '提示', { type: 'warning' }) } catch { return }
   const r = await orderStore.refundOrder(o.id, auth.user.id)
   r.ok ? ElMessage.success('退货申请已提交，等待审核') : ElMessage.error(r.msg || '申请失败')
+  load()
+}
+async function doShip(o) {
+  const r = await orderStore.updateStatus(o.id, '已发货', auth.user.id)
+  r && r.ok === false ? ElMessage.error(r.msg || '发货失败') : ElMessage.success('已发货')
+  load()
 }
 </script>
 
@@ -111,12 +162,19 @@ async function doRefund(o) {
 .page { min-height: 100vh; background: var(--bg); }
 .wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
 .wrap h2 { font-size: 22px; color: var(--text); margin: 0 0 18px; font-weight: 700; }
+.tabs { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.no { color: var(--primary); text-decoration: none; font-weight: 600; }
+.no:hover { text-decoration: underline; }
 .oc { margin-bottom: 18px; border-radius: 12px; border: 1px solid #f0ebe0; transition: box-shadow 0.2s; }
 .oc:hover { box-shadow: 0 4px 16px rgba(80,50,30,0.06); }
-.oh { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-secondary); }
+.oh { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-secondary); gap: 10px; flex-wrap: wrap; }
 .oi { display: flex; gap: 20px; padding: 10px 0; font-size: 13px; color: var(--text-muted); background: #fdfbf7; margin: 8px -20px; padding-left: 20px; padding-right: 20px; border-radius: 8px; }
 .ot { text-align: right; font-size: 18px; font-weight: 700; color: var(--danger); padding: 10px 0; }
 .actions { display: flex; gap: 8px; padding: 10px 0; flex-wrap: wrap; }
 .hint { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; }
 .steps { margin-top: 14px; padding: 12px 0 4px; border-top: 1px solid #f5f0e8; }
+@media (max-width: 768px) {
+  .wrap { padding: 14px; }
+  .steps :deep(.el-step__title) { font-size: 11px; }
+}
 </style>

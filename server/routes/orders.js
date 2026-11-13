@@ -112,7 +112,12 @@ router.get('/', authRequired, async (req, res) => {
     let sql = 'SELECT * FROM orders'
     const params = []
     if (!isAdmin(req)) {
-      sql += ' WHERE user_id=?'
+      // role=seller 时返回「别人买我书」的订单，否则返回我买的订单
+      if (req.query.role === 'seller') {
+        sql += ' WHERE seller_id=?'
+      } else {
+        sql += ' WHERE user_id=?'
+      }
       params.push(req.user.id)
     } else if (req.query.user_id) {
       sql += ' WHERE user_id=?'
@@ -141,6 +146,27 @@ async function loadOrderForUpdate(conn, id) {
   const [[order]] = await conn.query('SELECT * FROM orders WHERE id=? FOR UPDATE', [id])
   return order
 }
+
+// 订单详情：买家、卖家、管理员可见
+router.get('/:id', authRequired, async (req, res) => {
+  try {
+    const [[order]] = await pool.query('SELECT * FROM orders WHERE id=?', [req.params.id])
+    if (!order) return res.status(404).json({ ok: false, msg: '订单不存在' })
+    const buyer = String(order.user_id) === String(req.user.id)
+    const seller = String(order.seller_id) === String(req.user.id)
+    if (!isAdmin(req) && !buyer && !seller) {
+      return res.status(403).json({ ok: false, msg: '无权查看该订单' })
+    }
+    const [items] = await pool.query('SELECT * FROM order_items WHERE order_id=?', [order.id])
+    const [[buyerInfo]] = await pool.query('SELECT username, phone FROM users WHERE id=?', [order.user_id])
+    order.items = items
+    order.buyer_name = buyerInfo?.username || order.user_name
+    res.json(order)
+  } catch (e) {
+    console.error('GET /orders/:id error:', e.message)
+    res.status(500).json({ ok: false, msg: '加载失败' })
+  }
+})
 
 function canOperate(req, order) {
   return isAdmin(req) || String(order.user_id) === String(req.user.id) || String(order.seller_id) === String(req.user.id)

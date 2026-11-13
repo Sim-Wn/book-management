@@ -14,6 +14,7 @@ const routes = [
   { path: '/favorites', component: () => import('@/views/Favorites.vue') },
   { path: '/cart', component: () => import('@/views/Cart.vue') },
   { path: '/orders', component: () => import('@/views/Orders.vue') },
+  { path: '/orders/:id', component: () => import('@/views/OrderDetail.vue') },
   { path: '/profile', component: () => import('@/views/Profile.vue') },
   { path: '/swaps', component: () => import('@/views/Swaps.vue') },
   { path: '/chat', component: () => import('@/views/Chat.vue') },
