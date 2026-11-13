@@ -17,7 +17,7 @@
           </el-select>
         </div>
         <el-select v-model="sort" size="small" style="width:130px">
-          <el-option label="默认排序" value=""/>
+          <el-option label="默认排序" value="default"/>
           <el-option label="价格 ↑" value="price-asc"/>
           <el-option label="价格 ↓" value="price-desc"/>
           <el-option label="🔥 销量优先" value="sales"/>
@@ -29,10 +29,19 @@
       </div>
       <div v-else-if="list.length">
         <el-row :gutter="16">
-          <el-col v-for="b in list" :key="b.id" :xs="12" :sm="8" :md="6" :lg="4" style="margin-bottom:16px">
+          <el-col v-for="b in paged" :key="b.id" :xs="12" :sm="8" :md="6" :lg="4" style="margin-bottom:16px">
             <BookCard :book="b"/>
           </el-col>
         </el-row>
+        <div class="pager" v-if="list.length > pageSize">
+          <el-pagination
+            background
+            layout="prev, pager, next, total"
+            :total="list.length"
+            :page-size="pageSize"
+            v-model:current-page="page"
+          />
+        </div>
       </div>
       <el-empty v-else description="未找到相关图书" :image-size="100">
         <el-button type="primary" @click="cat='';loadBooks()">查看全部</el-button>
@@ -51,17 +60,21 @@ import BookCard from '@/components/BookCard.vue'
 const route = useRoute()
 const bookStore = useBookStore()
 const cat = ref('')
-const sort = ref('')
+const sort = ref('default')
 const loading = ref(true)
 
 const list = computed(() => bookStore.books.filter(b => b.status === '在售'))
+const page = ref(1)
+const pageSize = 24
+const paged = computed(() => list.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 
 async function loadBooks() {
   loading.value = true
+  page.value = 1
   const params = {}
   if (cat.value) params.category = cat.value
   if (route.query.q) params.keyword = route.query.q
-  if (sort.value) params.sort = sort.value
+  if (sort.value && sort.value !== 'default') params.sort = sort.value
   await bookStore.fetchBooks(params)
   loading.value = false
 }
@@ -118,5 +131,6 @@ onMounted(async () => {
 .chip.on { background: #8b6040; color: #fff; font-weight: 600; }
 
 .spinner { animation: spin 1s linear infinite; color: #8b6040; }
+.pager { display: flex; justify-content: center; padding: 8px 0 24px; }
 @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
 </style>
